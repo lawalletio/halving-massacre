@@ -8,8 +8,9 @@ datasource db {
 }
 
 enum Status {
+    SETUP
     INITIAL
-    BETTING
+    NORMAL
     FREEZE
     FINAL
 }
