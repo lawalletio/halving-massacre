@@ -22,7 +22,7 @@ This module publishes the following events:
   ],
   "content": {
     "currentBlock": block_number,
-    "participants": {
+    "players": {
       "lud16": "amount",
       ...
     },
@@ -69,7 +69,7 @@ This module publishes the following events:
     ["block", "current_block"]
   ],
   "content": {
-      "participant": "lud-16"
+      "players": "lud-16"
   }
  ...(id, pubkey, sig, created_at)
 ```
@@ -89,7 +89,7 @@ This module publishes the following events:
   ],
   "content": {
       "amount": "millisats",
-      "participant": "lud-16"
+      "players": "lud-16"
   }
  ...(id, pubkey, sig, created_at)
 ```
@@ -123,7 +123,7 @@ This module publishes the following events:
   ],
   "content": {
     "currentBlock": block_number,
-    "participants": {
+    "players": {
       "lud16": "amount",
       ...
     }
@@ -164,7 +164,7 @@ This module publishes the following events:
       "height": number,
       "merkleRoot": "merkle-root",
     }
-    "participants": {
+    "players": {
       "lud16": "amount",
       ...
     }
