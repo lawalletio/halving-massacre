@@ -14,20 +14,23 @@ This module publishes the following events:
   "kind": 31111,
   "tags": [
     ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
+    ["e", "<id>", "wss://relay.lawallet.ar", "<lastmodifier>"],
     ["d", "state"],
     ["L", "halving-massacre"],
     ["l", "state", "halving-massacre"],
     ["block", "current_block"]
   ],
   "content": {
-    "current_block": block_number,
+    "currentBlock": block_number,
     "participants": {
       "lud16": "amount",
       ...
     },
-    "next_freeze": block_number,
-    "next_halving": block_number,
+    "nextFreeze": blockNumber,
+    "nextHalving": blockNumber,
     "status": "SETUP" | "INITIAL" | "NORMAL" | "FREEZE" | "FINAL"
+    "currentFreezeLock": number,
+    "currentBlockLength": number,
  },
  ...(id, pubkey, sig, created_at)
 }
@@ -44,11 +47,10 @@ This module publishes the following events:
     ["block", "current_block"]
   ],
   "content": {
-      "initial_pool": "millisats",
-      "final_block": number,
-      "lock_duration": number,
-      "ticket_price": number,
-      "min_bet": "millisats"
+      "initialPool": "millisats",
+      "finalBlock": number,
+      "ticketPrice": number,
+      "minBet": "millisats"
   },
  ...(id, pubkey, sig, created_at)
 }
@@ -102,8 +104,9 @@ This module publishes the following events:
     ["block", "current_block"]
   ],
   "content": JSON.stringify({
-      "initial_block": number,
-      "round_length": number,
+      "initialBlock": number,
+      "lockDuration": number,
+      "roundLength": number,
   }),
  ...(id, pubkey, sig, created_at)
 ```
@@ -119,7 +122,7 @@ This module publishes the following events:
     ["block", "current_block"]
   ],
   "content": {
-    "current_block": block_number,
+    "currentBlock": block_number,
     "participants": {
       "lud16": "amount",
       ...
@@ -138,7 +141,8 @@ This module publishes the following events:
     ["block", "current_block"]
   ],
   "content": {
-      "round_length": number,
+      "roundLength": number,
+      "freezeTimeout": number,
   },
  ...(id, pubkey, sig, created_at)
 ```
@@ -148,19 +152,46 @@ This module publishes the following events:
   "kind": 1112,
   "tags": [
     ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
-    ["e", "<id>", "wss://relay.lawallet.ar", "zap-receipt"],
     ["L", "halving-massacre"],
     ["l", "massacre", "halving-massacre"],
     ["block", "current_block"],
     ["hash", "block_hash"]
   ],
   "content": {
-    "current_block": block_number,
-    "hash": hash,
+    "block": {
+      "id": "block-id",
+      "header": "block-header",
+      "height": number,
+      "merkleRoot": "merkle-root",
+    }
     "participants": {
       "lud16": "amount",
       ...
     }
+  }
+ ...(id, pubkey, sig, created_at)
+```
+
+#### Final
+```json
+  "kind": 1112,
+  "tags": [
+    ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
+    ["e", "<id>", "wss://relay.lawallet.ar", "massacre"],
+    ["L", "halving-massacre"],
+    ["l", "final", "halving-massacre"],
+    ["block", "current_block"],
+    ["hash", "block_hash"]
+  ],
+  "content": {
+    "block": {
+      "id": "block-id",
+      "header": "block-header",
+      "height": number,
+      "merkleRoot": "merkle-root",
+    }
+    "survivor": "lud16",
+    "totalPool": "millisats"
   }
  ...(id, pubkey, sig, created_at)
 ```
