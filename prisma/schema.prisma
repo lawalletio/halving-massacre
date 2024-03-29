@@ -8,39 +8,77 @@ datasource db {
 }
 
 enum Status {
-    SETUP
-    INITIAL
-    NORMAL
-    FREEZE
-    FINAL
+  SETUP
+  INITIAL
+  NORMAL
+  FREEZE
+  FINAL
 }
 
 model Game {
-    id              String  @id
+  id String @id
 
-    finalBlock      Int     @map("final_block")
-    firstBlock      Int     @map("first_block")
-    freezeDuration  Int     @map("freeze_duration")
-    initialPool     BigInt  @map("initial_pool")
-    minBet          BigInt  @map("min_bet")
-    roundLength     Int     @map("round_length")
-    ticketPrice     BigInt  @map("ticket_price")
+  finalBlock  Int    @map("final_block")
+  firstBlock  Int    @map("first_block")
+  initialPool BigInt @map("initial_pool")
+  minBet      BigInt @map("min_bet")
+  ticketPrice BigInt @map("ticket_price")
 
-    currentBlock    Int     @map("current_block")
-    nextFreeze      Int     @map("next_freeze")
-    nextMassacre    Int     @map("next_massacre")
-    currentPool     BigInt  @map("current_pool")
-    status          Status
+  currentBlock       Int    @map("current_block")
+  currentPool        BigInt @map("current_pool")
+  currentRoundNumber Int    @map("current_round_number")
+  freezeDuration     Int    @map("freeze_duration")
+  nextFreeze         Int    @map("next_freeze")
+  nextMassacre       Int    @map("next_massacre")
+  roundLength        Int    @map("round_length")
+  status             Status
 
-    participants  Participants[]  @relation
+  currentRound Round    @relation(fields: [id, currentRoundNumber], references: [gameId, number])
+  players      Player[] @relation
+  rounds       Round[]  @relation("gameRounds")
 }
 
-model Participant {
-    gameId         String  @map("game_id")
-    participantId  String  @map("participant_id")
-    amount         BigInt
+model Round {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gameId String @map("game_id")
+  number Int
 
-    game  Game  @relation(fields: [gameId], references: [id])
+  game        Game          @relation("gameRounds", fields: [gameId], references: [id])
+  deadPlayers Player[]      @relation("deadPlayers")
+  players     RoundPlayer[] @relation
+  Game        Game[]
 
-    @@id([gameId, participantId])
+  @@unique([gameId, number])
+}
+
+model Player {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gameId String @map("game_id")
+  lud16  String
+
+  amount       BigInt
+  deathRoundId String? @map("death_round_id")
+  maxZap       BigInt  @default(0) @map("max_zap")
+  totalZapped  BigInt  @default(0) @map("total_zapped")
+  zapCount     Int     @default(0) @map("zap_count")
+
+  game       Game          @relation(fields: [gameId], references: [id])
+  deathRound Round?        @relation("deadPlayers", fields: [deathRoundId], references: [id])
+  rounds     RoundPlayer[] @relation
+
+  @@unique([gameId, lud16])
+}
+
+model RoundPlayer {
+  roundId  String @map("round_id")
+  playerId String @map("player_id")
+
+  maxZap   BigInt @default(0) @map("max_zap")
+  zapped   BigInt @default(0)
+  zapCount BigInt @default(0) @map("zap_count")
+
+  player Player @relation(fields: [playerId], references: [id])
+  round  Round  @relation(fields: [roundId], references: [id])
+
+  @@id([playerId, roundId])
 }
