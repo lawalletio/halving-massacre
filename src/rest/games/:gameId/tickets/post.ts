@@ -45,7 +45,7 @@ function validateBody(data: unknown): RequestBody {
     debug('lud16 must be a string');
     throw new Error('lud16 must be a string');
   }
-  if (!LUD16_RE.test(body.lud16)) {
+  if (254 < body.lud16.length || !LUD16_RE.test(body.lud16)) {
     debug('lud16 must be a valid internet identifier');
     throw new Error('lud16 must be a valid internet identifier');
   }
