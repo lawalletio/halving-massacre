@@ -6,7 +6,7 @@ import { context, build } from 'esbuild';
 
 const buildOptions = {
   entryPoints: ['./src/**/*'],
-  globalName: 'module',
+  globalName: 'halvingmassacre',
   logLevel: 'debug',
   metafile: true,
   platform: 'node',
@@ -17,6 +17,7 @@ const buildOptions = {
   outdir: './dist',
   outExtension: { '.js': '.mjs' },
   packages: 'external',
+  bundle: true,
 };
 
 for (const arg of process.argv) {
