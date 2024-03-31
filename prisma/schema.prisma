@@ -44,10 +44,10 @@ model Round {
   gameId String @map("game_id")
   number Int
 
-  game        Game          @relation("gameRounds", fields: [gameId], references: [id])
-  deadPlayers Player[]      @relation("deadPlayers")
-  players     RoundPlayer[] @relation
-  Game        Game[]
+  game         Game          @relation("gameRounds", fields: [gameId], references: [id])
+  deadPlayers  Player[]      @relation("deadPlayers")
+  roundPlayers RoundPlayer[] @relation
+  Game         Game[]
 
   @@unique([gameId, number])
 }
@@ -64,10 +64,10 @@ model Player {
   totalZapped  BigInt  @default(0) @map("total_zapped")
   zapCount     Int     @default(0) @map("zap_count")
 
-  deathRound Round?        @relation("deadPlayers", fields: [deathRoundId], references: [id])
-  game       Game          @relation(fields: [gameId], references: [id])
-  ticket     Ticket        @relation(fields: [ticketId], references: [id])
-  rounds     RoundPlayer[] @relation
+  deathRound   Round?        @relation("deadPlayers", fields: [deathRoundId], references: [id])
+  game         Game          @relation(fields: [gameId], references: [id])
+  ticket       Ticket        @relation(fields: [ticketId], references: [id])
+  roundPlayers RoundPlayer[] @relation
 
   @@unique([gameId, lud16])
 }

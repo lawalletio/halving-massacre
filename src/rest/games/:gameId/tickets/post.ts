@@ -1,25 +1,19 @@
-import { ExtendedRequest, logger, requiredEnvVar } from '@lawallet/module';
+import { ExtendedRequest, logger } from '@lawallet/module';
 import { type GameContext } from '../../../../index';
 import { Debugger } from 'debug';
 import type { Response } from 'express';
 import { Prisma, PrismaClient, Status } from '@prisma/client';
+import { LUD16_RE, getInvoice, validLud16 } from '../../../../utils';
 
 const log: Debugger = logger.extend('rest:game:gameId:ticket:post');
 const trace: Debugger = log.extend('trace');
 const debug: Debugger = log.extend('debug');
 const warn: Debugger = log.extend('warn');
-const error: Debugger = log.extend('error');
 
-const LUD16_RE =
-  /(?<username>^[A-Z0-9._%+-]{1,64})@(?<domain>(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63})$/i;
 const VALID_STATUSES: Status[] = [Status.SETUP, Status.INITIAL];
 
 type RequestBody = {
   lud16: string;
-};
-type Lud06Response = {
-  pr: string;
-  routes: never[];
 };
 
 /**
@@ -41,15 +35,12 @@ function validateBody(data: unknown): RequestBody {
     debug('Missing lud16');
     throw new Error('Missing property lud16');
   }
-  if ('string' !== typeof body.lud16) {
-    debug('lud16 must be a string');
-    throw new Error('lud16 must be a string');
+  try {
+    return { lud16: validLud16(body.lud16) };
+  } catch (err: unknown) {
+    debug(err);
+    throw err;
   }
-  if (254 < body.lud16.length || !LUD16_RE.test(body.lud16)) {
-    debug('lud16 must be a valid internet identifier');
-    throw new Error('lud16 must be a valid internet identifier');
-  }
-  return { lud16: body.lud16 };
 }
 
 /**
@@ -117,34 +108,6 @@ async function generateTicket(
     where: { gameId_lud16: { gameId, lud16 } },
   });
   return ticket.id;
-}
-
-/**
- * Generates an invoice for our own account and return the response
- *
- * @param amount to generate the invoice for
- * @param comment for the invoice
- * @return an object containing the invoice in the `pr` key
- * @throws Error if the request failed
- */
-async function getInvoice(
-  amount: string,
-  comment: string,
-): Promise<Lud06Response> {
-  let res;
-  try {
-    res = await fetch(
-      `http://api.lawallet.ar/lnurlp/${requiredEnvVar('NOSTR_PUBLIC_KEY')}/callback?amount=${amount}&comment=${comment}`,
-    );
-  } catch (err: unknown) {
-    error('Error generating invoice: %O', err);
-    throw new Error('Error generating invoice');
-  }
-  if (res.status < 200 || 300 <= res.status) {
-    error('lud16 request returned non sucess status %O', res);
-    throw new Error('Error generating invoice');
-  }
-  return (await res.json()) as Lud06Response;
 }
 
 const GAME_SELECT = Prisma.validator<Prisma.GameSelect>()({
