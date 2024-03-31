@@ -199,7 +199,7 @@ async function handler<Context extends GameContext>(
     res.status(422).send({ message: (err as Error).message });
     return;
   }
-  const lud16 = body.lud16;
+  const lud16 = body.lud16.toLowerCase();
   const game = await findGame(req.context.prisma, gameId, lud16);
   if (!game) {
     res
@@ -213,7 +213,7 @@ async function handler<Context extends GameContext>(
       .send({ message: 'This game is no longer accepting new players' });
     return;
   }
-  if (game.players.some((p) => lud16 === p.lud16)) {
+  if (game.players.some((p) => lud16.toLowerCase() === p.lud16.toLowerCase())) {
     res.status(409).send({ message: `${lud16} is already playing` });
     return;
   }
