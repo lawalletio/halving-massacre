@@ -7,14 +7,14 @@ import {
 } from '@lawallet/module';
 import { PrismaClient } from '@prisma/client';
 
-type Context = DefaultContext & { prisma: PrismaClient };
+export type GameContext = DefaultContext & { prisma: PrismaClient };
 
-const context: Context = {
+const context: GameContext = {
   outbox: new DirectOutbox(getWriteNDK()),
   prisma: new PrismaClient(),
 };
 
-const module = Module.build<Context>({
+const module = Module.build<GameContext>({
   context,
   nostrPath: `${import.meta.dirname}/nostr`,
   port: Number(requiredEnvVar('PORT')),
