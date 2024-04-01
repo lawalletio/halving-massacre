@@ -93,7 +93,7 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
                     maxZap,
                     zapped: { increment: amount },
                     zapCount: { increment: 1 },
-                    zapRequests: { push: event.id! },
+                    zapReceipts: { push: event.id! },
                     player: {
                       update: {
                         data: {
