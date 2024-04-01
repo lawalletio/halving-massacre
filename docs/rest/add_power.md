@@ -7,7 +7,7 @@ curl --request GET \
   --url 'http://https/<apiendpoint>/games/<gameId>/power?amount=&lud16='
 ```
 
-## Method, UDL and params
+## Method, URL and params
 `GET https://<apidomain>/games/<gameId>/power?amount=<amount>&lud16=<lud16>`
 
 ### Path params
