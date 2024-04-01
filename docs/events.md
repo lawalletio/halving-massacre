@@ -1,4 +1,5 @@
 #### State
+
 ```json
 {
   "kind": 31111,
@@ -27,6 +28,7 @@
 ```
 
 #### Setup
+
 ```json
 {
   "kind": 1112,
@@ -47,6 +49,7 @@
 ```
 
 #### Ticket
+
 ```json
   "kind": 1112,
   "tags": [
@@ -65,6 +68,7 @@
 ```
 
 #### Bet Receipt
+
 ```json
   "kind": 1112,
   "tags": [
@@ -85,6 +89,7 @@
 ```
 
 #### Start
+
 ```json
   "kind": 1112,
   "tags": [
@@ -102,6 +107,7 @@
 ```
 
 #### Freeze
+
 ```json
   kind: 1112,
   "tags": [
@@ -122,6 +128,7 @@
 ```
 
 #### Change round length
+
 ```json
   "kind": 1112,
   "tags": [
@@ -138,6 +145,7 @@
 ```
 
 #### Massacre
+
 ```json
   "kind": 1112,
   "tags": [
@@ -163,6 +171,7 @@
 ```
 
 #### Final
+
 ```json
   "kind": 1112,
   "tags": [
@@ -185,4 +194,3 @@
   }
  ...(id, pubkey, sig, created_at)
 ```
-

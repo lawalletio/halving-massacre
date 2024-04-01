@@ -16,9 +16,11 @@ const GAME_SELECT = Prisma.validator<Prisma.GameSelect>()({
     },
   },
 });
+
 type GameInfo = Prisma.GameGetPayload<{
   select: typeof GAME_SELECT;
 }>;
+
 /**
  * Finds a game by id, also returns if the lud16 is already a player
  *

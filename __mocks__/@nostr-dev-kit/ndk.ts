@@ -3,7 +3,7 @@ export const mockEventPublish = jest.fn();
 export const NDKEvent = jest.fn().mockImplementation(() => {
   return {
     publish: mockEventPublish,
-  }
+  };
 });
 
 export const NDKPrivateKeySigner = jest.fn();
@@ -21,7 +21,7 @@ export const mockedNDK = {
   assertSigner: jest.fn(),
   connect: jest.fn().mockResolvedValue(''),
   on: jest.fn(),
-  pool : {
+  pool: {
     on: jest.fn(),
     relays: new Map([[1, mockedNDKRelay]]),
   },

@@ -1,8 +1,9 @@
 # Halving Massacre Game
-This module hosts a Halving Massacre Game, being responsible for all the
-tracking, calculations and communication.
+
+This module hosts a Halving Massacre Game, being responsible for all the tracking, calculations and communication.
 
 ## The Game
+
 ![State Diagram](docs/assets/state_diagram.svg)
 
 ### [Published events](docs/events.md)
