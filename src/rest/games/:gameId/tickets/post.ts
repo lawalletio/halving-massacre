@@ -188,7 +188,7 @@ async function handler<Context extends GameContext>(
   const ticketId = await generateTicket(req.context.prisma, game.id, lud16);
   let lud06Res;
   try {
-    lud06Res = await getInvoice(game.ticketPrice.toString(), ticketId);
+    lud06Res = await getInvoice(gameId, game.ticketPrice.toString(), ticketId);
   } catch (err: unknown) {
     const message = (err as Error).message;
     res.status(500).json({ message }).send();

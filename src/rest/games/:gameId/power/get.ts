@@ -80,11 +80,9 @@ async function handler<Context extends GameContext>(
     return;
   }
   if (!VALID_STATUSES.includes(game.status)) {
-    res
-      .status(409)
-      .send({
-        message: `This game is not accepting power wait for block: ${game.nextMassacre}`,
-      });
+    res.status(409).send({
+      message: `This game is not accepting power wait for block: ${game.nextMassacre}`,
+    });
     return;
   }
   if (!game.currentRound.roundPlayers.some((rp) => lud16 === rp.player.lud16)) {
@@ -97,7 +95,7 @@ async function handler<Context extends GameContext>(
   }
   let lud06Res;
   try {
-    lud06Res = await getInvoice(amount.toString(), lud16);
+    lud06Res = await getInvoice(gameId, amount.toString(), lud16);
   } catch (err: unknown) {
     const message = (err as Error).message;
     res.status(500).json({ message }).send();
