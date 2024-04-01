@@ -4,7 +4,7 @@
   "kind": 31111,
   "tags": [
     ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
-    ["e", "<id>", "wss://relay.lawallet.ar", "<lastmodifier>"],
+    ["e", "<id>", "wss://relay.lawallet.ar", "<last_modified>"],
     ["d", "state"],
     ["L", "halving-massacre"],
     ["l", "state", "halving-massacre"],
@@ -50,7 +50,7 @@
 ```json
   "kind": 1112,
   "tags": [
-    ["p", "<comprador>"], //optional
+    ["p", "<buyer>"], // optional
     ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
     ["e", "<id>", "wss://relay.lawallet.ar", "zap-receipt"],
     ["L", "halving-massacre"],
@@ -68,7 +68,7 @@
 ```json
   "kind": 1112,
   "tags": [
-    ["p", "<comprador>"], //opcional
+    ["p", "<buyer>"], // optional
     ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
     ["e", "<id>", "wss://relay.lawallet.ar", "zap-receipt"],
     ["L", "halving-massacre"],

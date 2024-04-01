@@ -28,8 +28,8 @@ curl --request GET \
     "routes": []
 }
 ```
-The sucess response will be a valid lud06 response with the invoice in the `pr`
-key
+
+The success response will be a valid lud06 response with the invoice in the `pr` key
 
 ### Error
 ```json

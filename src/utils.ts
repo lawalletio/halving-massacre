@@ -89,7 +89,7 @@ export async function getInvoice(
     throw new Error('Error generating invoice');
   }
   if (res.status < 200 || 300 <= res.status) {
-    error('lud16 request returned non sucess status %O', res);
+    error('lud16 request returned non success status %O', res);
     throw new Error('Error generating invoice');
   }
   return (await res.json()) as Lud06Response;

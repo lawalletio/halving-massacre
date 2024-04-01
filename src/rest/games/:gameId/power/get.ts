@@ -90,7 +90,7 @@ async function handler<Context extends GameContext>(
     return;
   }
   if (amount < game.minBet) {
-    res.status(400).send({ message: `Not enouth power, min: ${game.minBet}` });
+    res.status(400).send({ message: `Not enough power, min: ${game.minBet}` });
     return;
   }
   let lud06Res;

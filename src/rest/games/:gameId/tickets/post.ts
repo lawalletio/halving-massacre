@@ -46,7 +46,7 @@ function validateBody(data: unknown): RequestBody {
 /**
  * Checks if the domain returns a valid lud06 response for the user
  *
- * @param lud16 tat we asume was previously validated as a valid address
+ * @param lud16 that we assume was previously validated as a valid address
  * @returns true if the domain returned a valid lud06 response false otherwise
  */
 async function isServerActive(lud16: string): Promise<boolean> {
@@ -62,7 +62,7 @@ async function isServerActive(lud16: string): Promise<boolean> {
     return false;
   }
   if (res.status < 200 || 300 <= res.status) {
-    log('lud16 request returned non sucess status %O', res.status);
+    log('lud16 request returned non success status %O', res.status);
     return false;
   }
   const body = await res.json();
