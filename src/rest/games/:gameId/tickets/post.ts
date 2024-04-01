@@ -30,13 +30,12 @@ function validateBody(data: unknown): RequestBody {
     debug('Invalid body (null or not object)');
     throw new Error('Invalid body (null or not object)');
   }
-  const body = data;
-  if (!('lud16' in body)) {
+  if (!('lud16' in data)) {
     debug('Missing lud16');
     throw new Error('Missing property lud16');
   }
   try {
-    return { lud16: validLud16(body.lud16) };
+    return { lud16: validLud16(data.lud16) };
   } catch (err: unknown) {
     debug(err);
     throw err;

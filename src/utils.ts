@@ -30,11 +30,10 @@ export function validLud16(input: unknown): string {
   if ('string' !== typeof input) {
     throw new Error('lud16 must be a string');
   }
-  const lud16 = input;
-  if (254 < lud16.length || !LUD16_RE.test(lud16)) {
+  if (254 < input.length || !LUD16_RE.test(input)) {
     throw new Error('lud16 must be a valid internet identifier');
   }
-  return lud16;
+  return input;
 }
 
 /**
