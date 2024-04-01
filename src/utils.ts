@@ -1,5 +1,10 @@
 import { logger, requiredEnvVar } from '@lawallet/module';
 import { Debugger } from 'debug';
+import NDK, {
+  NDKEvent,
+  NDKPrivateKeySigner,
+  NostrEvent,
+} from 'node_modules/@nostr-dev-kit/ndk/dist';
 import { makeZapRequest } from 'nostr-tools/nip57';
 
 const log: Debugger = logger.extend('utils');
@@ -33,6 +38,34 @@ export function validLud16(input: unknown): string {
 }
 
 /**
+ * Generates a zap request and signs it
+ *
+ * @param amount to make the zr for
+ * @param event id to include in the tag
+ * @param comment to add on the zap request
+ * @return the signed zap request event
+ */
+async function signedZapRequest(
+  amount: number,
+  event: string,
+  comment: string,
+): Promise<NostrEvent> {
+  const zr = makeZapRequest({
+    profile: requiredEnvVar('BTC_GATEWAY_PUBLIC_KEY'),
+    event,
+    amount,
+    comment,
+    //TODO
+    relays: [],
+  });
+  const pubkey = requiredEnvVar('NOSTR_PUBLIC_KEY');
+  const signer = new NDKPrivateKeySigner(requiredEnvVar('NOSTR_PRIVATE_KEY'));
+  const ndkZr = new NDKEvent(new NDK({ signer }), { pubkey, ...zr });
+  await ndkZr.sign();
+  return await ndkZr.toNostrEvent();
+}
+
+/**
  * Generates an invoice for our own account and return the response
  *
  * @param amount to generate the invoice for
@@ -45,18 +78,11 @@ export async function getInvoice(
   amount: string,
   comment: string,
 ): Promise<Lud06Response> {
-  const zapRequest = makeZapRequest({
-    profile: requiredEnvVar('BTC_GATEWAY_PUBLIC_KEY'),
-    event: gameId,
-    amount: Number(amount),
-    comment,
-    //TODO
-    relays: [],
-  });
+  const zr = signedZapRequest(Number(amount), gameId, comment);
   let res;
   try {
     res = await fetch(
-      `${LUD06_CALLBACK}?amount=${amount}&comment=${comment}&zr=${JSON.stringify(zapRequest)}`,
+      `${LUD06_CALLBACK}?amount=${amount}&comment=${comment}&zr=${JSON.stringify(zr)}`,
     );
   } catch (err: unknown) {
     error('Error generating invoice: %O', err);
