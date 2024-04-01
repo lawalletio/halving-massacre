@@ -47,4 +47,4 @@ key
 ```
 If any validation fails the response will be have a 4XX code, if the invoice
 generation itself failed or we encountered any unexpected error the code will be
-5XX, in any case the body will contain a message:
+5XX, in any case the body will contain a message.

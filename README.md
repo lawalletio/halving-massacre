@@ -10,6 +10,7 @@ tracking, calculations and communication.
 ### Rest endpoints
 
 - [Create ticket](docs/rest/create_ticket.md)
+- [Add power](docs/rest/add_power.md)
 
 ## Contributing
 
