@@ -6,7 +6,7 @@
   "tags": [
     ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
     ["e", "<id>", "wss://relay.lawallet.ar", "<last_modified>"],
-    ["d", "state"],
+    ["d", "state:<setup_id>"],
     ["L", "halving-massacre"],
     ["l", "state", "halving-massacre"],
     ["block", "current_block"]
@@ -18,10 +18,10 @@
       ...
     },
     "nextFreeze": blockNumber,
-    "nextHalving": blockNumber,
+    "nextMassacre": blockNumber,
     "status": "SETUP" | "INITIAL" | "NORMAL" | "FREEZE" | "FINAL"
-    "currentFreezeLock": number,
-    "currentBlockLength": number,
+    "roundLength": number,
+    "freezeDuration": number,
  },
  ...(id, pubkey, sig, created_at)
 }
@@ -67,7 +67,7 @@
  ...(id, pubkey, sig, created_at)
 ```
 
-#### Bet Receipt
+#### Power receipt
 
 ```json
   "kind": 1112,
@@ -76,7 +76,7 @@
     ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
     ["e", "<id>", "wss://relay.lawallet.ar", "zap-receipt"],
     ["L", "halving-massacre"],
-    ["l", "bet-receipt", "halving-massacre"],
+    ["l", "power-receipt", "halving-massacre"],
     ["i", "lud-16"],
     ["amount", "millisats"],
     ["block", "current_block"]

@@ -60,8 +60,9 @@ model Player {
   amount       BigInt  @default(0)
   deathRoundId String? @map("death_round_id")
   maxZap       BigInt  @default(0) @map("max_zap")
+  power        BigInt  @default(0)
   ticketId     String  @unique @map("ticket_id")
-  totalZapped  BigInt  @default(0) @map("total_zapped")
+  zapped       BigInt  @default(0) @map("total_zapped")
   zapCount     Int     @default(0) @map("zap_count")
 
   deathRound   Round?        @relation("deadPlayers", fields: [deathRoundId], references: [id])
@@ -76,9 +77,10 @@ model RoundPlayer {
   roundId  String @map("round_id")
   playerId String @map("player_id")
 
-  maxZap   BigInt @default(0) @map("max_zap")
-  zapped   BigInt @default(0)
-  zapCount BigInt @default(0) @map("zap_count")
+  maxZap      BigInt   @default(0) @map("max_zap")
+  zapped      BigInt   @default(0)
+  zapCount    BigInt   @default(0) @map("zap_count")
+  zapReceipts String[] @map("zap_requests")
 
   player Player @relation(fields: [playerId], references: [id])
   round  Round  @relation(fields: [roundId], references: [id])
