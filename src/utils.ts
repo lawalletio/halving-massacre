@@ -11,7 +11,7 @@ const log: Debugger = logger.extend('utils');
 const error: Debugger = log.extend('error');
 
 export const LUD16_RE =
-  /(?<username>^[A-Z0-9._%+-]{1,64})@(?<domain>(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63})$/i;
+  /(?<username>^[A-Z0-9._-]{1,64})@(?<domain>(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63})$/i;
 const LUD06_CALLBACK = `${requiredEnvVar('BTC_GATEWAY_PUBLIC_KEY')}/lnurlp/${requiredEnvVar('NOSTR_PUBLIC_KEY')}/callback`;
 
 export type Lud06Response = {
