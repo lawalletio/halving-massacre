@@ -92,12 +92,7 @@ async function addPower(
     select: GAME_STATE_SELECT,
     where: { id: gameId },
   });
-  const powerReceipt = powerReceiptEvent(
-    game,
-    amount.toString(),
-    walias,
-    zapReceiptId,
-  );
+  const powerReceipt = powerReceiptEvent(game, amount, walias, zapReceiptId);
   await Promise.all([
     ctx.outbox.publish(powerReceipt),
     ctx.outbox.publish(

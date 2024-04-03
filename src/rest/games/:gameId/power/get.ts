@@ -108,11 +108,7 @@ async function handler<Context extends GameContext>(
   };
   let lud06Res;
   try {
-    lud06Res = await getInvoice(
-      eTag,
-      amount.toString(),
-      JSON.stringify(content),
-    );
+    lud06Res = await getInvoice(eTag, amount, JSON.stringify(content));
   } catch (err: unknown) {
     const message = (err as Error).message;
     res.status(500).json({ message }).send();

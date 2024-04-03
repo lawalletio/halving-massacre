@@ -66,7 +66,7 @@ export function gameStateEvent(
   const { currentRound, ...rest } = game;
   const playerEntries = currentRound.roundPlayers.map((rp) => [
     rp.player.walias,
-    rp.player.power.toString(),
+    rp.player.power,
   ]);
   const players = Object.fromEntries(playerEntries) as Record<string, string>;
   const content = JSON.stringify({
@@ -100,7 +100,7 @@ export function gameStateEvent(
  */
 export function powerReceiptEvent(
   game: Pick<GameStateData, 'id' | 'currentBlock'>,
-  amount: string,
+  amount: number,
   walias: string,
   zapReceiptId: string,
 ): NostrEvent {
@@ -118,7 +118,7 @@ export function powerReceiptEvent(
       ['L', 'halving-massacre'],
       ['l', 'power-receipt', 'halving-massacre'],
       ['i', walias],
-      ['amount', amount],
+      ['amount', amount.toString()],
       ['block', game.currentBlock.toString()],
     ],
     created_at: nowInSeconds(),
@@ -215,14 +215,14 @@ async function signedZapRequest(
  */
 export async function getInvoice(
   eventId: string,
-  amount: string,
+  amount: number,
   comment: string,
 ): Promise<Lud06Response> {
   const zr = signedZapRequest(Number(amount), eventId, comment);
   let res;
   try {
     res = await fetch(
-      `${LUD06_CALLBACK}?amount=${amount}&comment=${comment}&zr=${JSON.stringify(zr)}`,
+      `${LUD06_CALLBACK}?amount=${amount.toString()}&comment=${comment}&zr=${JSON.stringify(zr)}`,
     );
   } catch (err: unknown) {
     error('Error generating invoice: %O', err);

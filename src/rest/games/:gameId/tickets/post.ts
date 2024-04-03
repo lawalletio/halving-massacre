@@ -199,7 +199,7 @@ async function handler<Context extends GameContext>(
   try {
     lud06Res = await getInvoice(
       eTag,
-      game.ticketPrice.toString(),
+      game.ticketPrice,
       JSON.stringify(content),
     );
   } catch (err: unknown) {

@@ -16,7 +16,7 @@
   "content": {
     "currentBlock": block_number,
     "players": {
-      "walias": "amount",
+      "walias": power_amount,
       ...
     },
     "nextFreeze": blockNumber,
@@ -42,10 +42,10 @@
     ["block", "current_block"]
   ],
   "content": {
-      "initialPool": "millisats",
+      "initialPool": millisats,
       "finalBlock": number,
-      "ticketPrice": number,
-      "minBet": "millisats"
+      "ticketPrice": millisats,
+      "minBet": millisats
   },
  ...(id, pubkey, sig, created_at)
 }
@@ -85,7 +85,7 @@
     ["block", "current_block"]
   ],
   "content": {
-      "amount": "millisats",
+      "amount": millisats,
       "player": "walias"
   }
  ...(id, pubkey, sig, created_at)
@@ -123,7 +123,7 @@
   "content": {
     "currentBlock": block_number,
     "players": {
-      "walias": "amount",
+      "walias": power_amount,
       ...
     }
   }
@@ -166,7 +166,7 @@
       "merkleRoot": "merkle-root",
     }
     "players": {
-      "walias": "amount",
+      "walias": power_amount,
       ...
     },
     "deadPlayers": ["<walias>", "<walias>" ...]
@@ -194,7 +194,7 @@
       "merkleRoot": "merkle-root",
     }
     "survivor": "walias",
-    "totalPool": "millisats"
+    "totalPool": millisats
   }
  ...(id, pubkey, sig, created_at)
 ```
