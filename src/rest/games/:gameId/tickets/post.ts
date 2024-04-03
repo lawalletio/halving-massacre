@@ -3,7 +3,8 @@ import { type GameContext } from '../../../../index';
 import { Debugger } from 'debug';
 import type { Response } from 'express';
 import { Prisma, PrismaClient, Status } from '@prisma/client';
-import { LUD16_RE, getInvoice, validLud16 } from '../../../../utils';
+import { LUD16_RE, ZapType, getInvoice, validLud16 } from '../../../../utils';
+import { createHash } from 'crypto';
 
 const log: Debugger = logger.extend('rest:game:gameId:ticket:post');
 const trace: Debugger = log.extend('trace');
@@ -186,15 +187,28 @@ async function handler<Context extends GameContext>(
     return;
   }
   const ticketId = await generateTicket(req.context.prisma, game.id, lud16);
+  const eTag = createHash('sha256').update(ticketId).digest('hex');
+  const content = {
+    type: ZapType.TICKET,
+    gameId,
+    ticketId,
+  };
   let lud06Res;
   try {
-    lud06Res = await getInvoice(gameId, game.ticketPrice.toString(), ticketId);
+    lud06Res = await getInvoice(
+      eTag,
+      game.ticketPrice.toString(),
+      JSON.stringify(content),
+    );
   } catch (err: unknown) {
     const message = (err as Error).message;
     res.status(500).json({ message }).send();
     return;
   }
-  res.status(200).json(lud06Res).send();
+  res
+    .status(200)
+    .json({ eTag, ...lud06Res })
+    .send();
 }
 
 export default handler;

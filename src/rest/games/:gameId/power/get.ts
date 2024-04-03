@@ -1,8 +1,9 @@
 import { ExtendedRequest } from '@lawallet/module';
-import { getInvoice, validLud16 } from '../../../../utils';
+import { ZapType, getInvoice, validLud16 } from '../../../../utils';
 import type { Response } from 'express';
 import { GameContext } from '../../../../index';
 import { Prisma, PrismaClient, Status } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 const VALID_STATUSES: Status[] = [Status.SETUP, Status.INITIAL, Status.NORMAL];
 
@@ -95,15 +96,28 @@ async function handler<Context extends GameContext>(
     res.status(400).send({ message: `Not enough power, min: ${game.minBet}` });
     return;
   }
+  const eTag = randomBytes(32).toString('hex');
+  const content = {
+    type: ZapType.POWER,
+    gameId,
+    lud16,
+  };
   let lud06Res;
   try {
-    lud06Res = await getInvoice(gameId, amount.toString(), lud16);
+    lud06Res = await getInvoice(
+      eTag,
+      amount.toString(),
+      JSON.stringify(content),
+    );
   } catch (err: unknown) {
     const message = (err as Error).message;
     res.status(500).json({ message }).send();
     return;
   }
-  res.status(200).json(lud06Res).send();
+  res
+    .status(200)
+    .json({ eTag, ...lud06Res })
+    .send();
 }
 
 export default handler;

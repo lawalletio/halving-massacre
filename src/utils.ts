@@ -15,6 +15,23 @@ export const LUD16_RE =
   /(?<username>^[A-Z0-9._-]{1,64})@(?<domain>(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63})$/i;
 const LUD06_CALLBACK = `${requiredEnvVar('BTC_GATEWAY_PUBLIC_KEY')}/lnurlp/${requiredEnvVar('NOSTR_PUBLIC_KEY')}/callback`;
 
+export enum ZapType {
+  TICKET = 'TICKET',
+  POWER = 'POWER',
+}
+
+export type ZapTicketContent = {
+  type: ZapType.TICKET;
+  gameId: string;
+  ticketId: string;
+};
+
+export type ZapPowerContent = {
+  type: ZapType.POWER;
+  gameId: string;
+  lud16: string;
+};
+
 export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
   id: true,
   currentBlock: true,
@@ -197,11 +214,11 @@ async function signedZapRequest(
  * @throws Error if the request failed
  */
 export async function getInvoice(
-  gameId: string,
+  eventId: string,
   amount: string,
   comment: string,
 ): Promise<Lud06Response> {
-  const zr = signedZapRequest(Number(amount), gameId, comment);
+  const zr = signedZapRequest(Number(amount), eventId, comment);
   let res;
   try {
     res = await fetch(

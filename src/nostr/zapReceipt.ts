@@ -8,7 +8,9 @@ import { NDKFilter, NostrEvent } from 'node_modules/@nostr-dev-kit/ndk/dist';
 import { GameContext } from '../index';
 import {
   GAME_STATE_SELECT,
-  LUD16_RE,
+  ZapPowerContent,
+  ZapTicketContent,
+  ZapType,
   gameStateEvent,
   powerReceiptEvent,
   ticketEvent,
@@ -24,6 +26,7 @@ import { Debugger } from 'debug';
 
 const log: Debugger = logger.extend('nostr:zapReceipt');
 const warn: Debugger = log.extend('warn');
+const error: Debugger = log.extend('error');
 
 const filter: NDKFilter = {
   kinds: [9735],
@@ -34,13 +37,12 @@ const filter: NDKFilter = {
 };
 
 async function addPower(
-  zapRequest: NostrEvent,
-  gameId: string,
+  content: ZapPowerContent,
+  amount: number,
   zapReceiptId: string,
   ctx: GameContext,
 ): Promise<void> {
-  const amount = Number(getTagValue(zapRequest, 'amount'));
-  const lud16 = zapRequest.content;
+  const { gameId, lud16 } = content;
   const roundPlayer = await ctx.prisma.roundPlayer.findFirst({
     where: {
       player: { lud16 },
@@ -49,7 +51,7 @@ async function addPower(
     orderBy: { round: { number: 'desc' } },
   });
   if (!roundPlayer) {
-    warn('%s is not a player alive on $s', lud16, gameId);
+    warn('%s is not a player alive on %$s', lud16, gameId);
     return;
   }
   const maxZap = amount < roundPlayer.maxZap ? roundPlayer.maxZap : amount;
@@ -105,13 +107,12 @@ async function addPower(
 }
 
 async function consumeTicket(
-  zapRequest: NostrEvent,
-  gameId: string,
+  content: ZapTicketContent,
+  amount: number,
   zapReceiptId: string,
   ctx: GameContext,
 ): Promise<void> {
-  const amount = Number(getTagValue(zapRequest, 'amount'));
-  const ticketId = zapRequest.content;
+  const { gameId, ticketId } = content;
   const ticket = await ctx.prisma.ticket.findUnique({
     select: {
       id: true,
@@ -166,6 +167,33 @@ async function consumeTicket(
   ]);
 }
 
+function validateContent(
+  content: string,
+): ZapTicketContent | ZapPowerContent | null {
+  let obj: object;
+  try {
+    obj = JSON.parse(content) as object;
+  } catch (err: unknown) {
+    warn('Error parsing zapRequest content: %O', err);
+    return null;
+  }
+  if (
+    !('type' in obj) ||
+    !('gameId' in obj) ||
+    'string' !== typeof obj.type ||
+    'string' !== typeof obj.gameId
+  ) {
+    return null;
+  }
+  if (
+    !('lud16' in obj && 'string' === typeof obj.lud16) &&
+    !('ticketId' in obj && 'string' === typeof obj.ticketId)
+  ) {
+    return null;
+  }
+  return obj as ZapTicketContent | ZapPowerContent;
+}
+
 function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
   return async (event: NostrEvent): Promise<void> => {
     const exists = await ctx.prisma.roundPlayer.findFirst({
@@ -173,11 +201,6 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
     });
     if (exists) {
       log(`Already handled zap receipt ${event.id}`);
-      return;
-    }
-    const gameId = getTagValue(event, 'e');
-    if (!gameId) {
-      warn('INVALID ZAP RECEIPT, NEED e TAG FOR GAME ID %O', event.id);
       return;
     }
     const strZapRequest = getTagValue(event, 'description');
@@ -194,12 +217,27 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
       warn('INVALID ZAP REQUEST', zapRequest);
       return;
     }
-    if (LUD16_RE.test(zapRequest.content)) {
-      await addPower(zapRequest, gameId, event.id!, ctx);
+    const content = validateContent(zapRequest.content);
+    if (!content) {
+      warn('Invalid zap request content: %O', zapRequest.content);
       return;
-    } else {
-      await consumeTicket(zapRequest, gameId, event.id!, ctx);
-      return;
+    }
+    const amount = Number(getTagValue(zapRequest, 'amount'));
+    switch (content.type.toUpperCase()) {
+      case ZapType.TICKET.valueOf():
+        await consumeTicket(
+          content as ZapTicketContent,
+          amount,
+          event.id!,
+          ctx,
+        );
+        break;
+      case ZapType.POWER.valueOf():
+        await addPower(content as ZapPowerContent, amount, event.id!, ctx);
+        break;
+      default:
+        error('Invalid type: %s', content.type.toUpperCase());
+        break;
     }
   };
 }

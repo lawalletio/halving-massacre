@@ -27,7 +27,8 @@ curl --request GET \
 ```json
 {
     "pr": "<bolt11 invoice>",
-    "routes": []
+    "routes": [],
+    "eTag": "<string that will be published ad zapReceipt eTag>"
 }
 ```
 

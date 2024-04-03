@@ -36,7 +36,8 @@ The body must be a json containing the lud16 of the user that will enter with th
 ```json
 {
   "pr": "<bolt11 invoice>",
-  "routes": []
+  "routes": [],
+  "eTag": "<string that will be published ad zapReceipt eTag>"
 }
 ```
 
