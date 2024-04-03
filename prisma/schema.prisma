@@ -18,19 +18,19 @@ enum Status {
 model Game {
   id String @id
 
-  finalBlock  Int @map("final_block")
+  finalBlock  Int  @map("final_block")
   firstBlock  Int? @map("first_block")
-  initialPool Int @map("initial_pool")
-  minBet      Int @map("min_bet")
-  ticketPrice Int @map("ticket_price")
+  initialPool Int  @map("initial_pool")
+  minBet      Int  @map("min_bet")
+  ticketPrice Int  @map("ticket_price")
 
   currentBlock       Int    @map("current_block")
   currentPool        Int    @map("current_pool")
   currentRoundNumber Int    @map("current_round_number")
-  freezeDuration     Int?    @map("freeze_duration")
-  nextFreeze         Int?    @map("next_freeze")
-  nextMassacre       Int?    @map("next_massacre")
-  roundLength        Int?    @map("round_length")
+  freezeDuration     Int?   @map("freeze_duration")
+  nextFreeze         Int?   @map("next_freeze")
+  nextMassacre       Int?   @map("next_massacre")
+  roundLength        Int?   @map("round_length")
   status             Status
 
   currentRound Round    @relation(fields: [id, currentRoundNumber], references: [gameId, number])
