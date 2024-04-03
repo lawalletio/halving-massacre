@@ -177,7 +177,9 @@ async function handler<Context extends GameContext>(
       .send({ message: 'This game is no longer accepting new players' });
     return;
   }
-  if (game.players.some((p) => walias.toLowerCase() === p.walias.toLowerCase())) {
+  if (
+    game.players.some((p) => walias.toLowerCase() === p.walias.toLowerCase())
+  ) {
     res.status(409).send({ message: `${walias} is already playing` });
     return;
   }

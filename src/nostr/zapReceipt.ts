@@ -125,7 +125,7 @@ async function consumeTicket(
     warn('Available ticket not found: %s', ticketId);
     return;
   }
-  if (ticket.game.ticketPrice < BigInt(amount)) {
+  if (ticket.game.ticketPrice < amount) {
     warn(
       'Zapped too little for ticket %s, received %d need %d',
       ticketId,

@@ -18,14 +18,14 @@ enum Status {
 model Game {
   id String @id
 
-  finalBlock  Int    @map("final_block")
-  firstBlock  Int    @map("first_block")
-  initialPool BigInt @map("initial_pool")
-  minBet      BigInt @map("min_bet")
-  ticketPrice BigInt @map("ticket_price")
+  finalBlock  Int @map("final_block")
+  firstBlock  Int @map("first_block")
+  initialPool Int @map("initial_pool")
+  minBet      Int @map("min_bet")
+  ticketPrice Int @map("ticket_price")
 
   currentBlock       Int    @map("current_block")
-  currentPool        BigInt @map("current_pool")
+  currentPool        Int    @map("current_pool")
   currentRoundNumber Int    @map("current_round_number")
   freezeDuration     Int    @map("freeze_duration")
   nextFreeze         Int    @map("next_freeze")
@@ -55,13 +55,13 @@ model Round {
 model Player {
   id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   gameId String @map("game_id")
-  walias  String
+  walias String
 
-  deathRoundId String? @map("death_round_id")
-  maxZap       BigInt  @default(0) @map("max_zap")
-  power        BigInt  @default(0)
-  ticketId     String  @unique @map("ticket_id")
-  zapped       BigInt  @default(0) @map("total_zapped")
+  deathRoundId String? @map("death_round_id") @db.Uuid
+  maxZap       Int     @default(0) @map("max_zap")
+  power        Int     @default(0)
+  ticketId     String  @unique @map("ticket_id") @db.Uuid
+  zapped       Int     @default(0) @map("total_zapped")
   zapCount     Int     @default(0) @map("zap_count")
 
   deathRound   Round?        @relation("deadPlayers", fields: [deathRoundId], references: [id])
@@ -73,12 +73,12 @@ model Player {
 }
 
 model RoundPlayer {
-  roundId  String @map("round_id")
-  playerId String @map("player_id")
+  roundId  String @map("round_id") @db.Uuid
+  playerId String @map("player_id") @db.Uuid
 
-  maxZap      BigInt   @default(0) @map("max_zap")
-  zapped      BigInt   @default(0)
-  zapCount    BigInt   @default(0) @map("zap_count")
+  maxZap      Int      @default(0) @map("max_zap")
+  zapped      Int      @default(0)
+  zapCount    Int      @default(0) @map("zap_count")
   zapReceipts String[] @map("zap_requests")
 
   player Player @relation(fields: [playerId], references: [id])
@@ -91,7 +91,7 @@ model Ticket {
   id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
   gameId String @map("game_id")
-  walias  String
+  walias String
 
   game   Game    @relation(fields: [gameId], references: [id])
   player Player? @relation

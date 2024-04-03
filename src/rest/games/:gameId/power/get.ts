@@ -63,13 +63,15 @@ async function handler<Context extends GameContext>(
   }
   const qAmount = req.query['amount'];
   if (!qAmount || 'string' !== typeof qAmount) {
-    res.status(422).send({ message: 'Required query params amount and walias' });
+    res
+      .status(422)
+      .send({ message: 'Required query params amount and walias' });
     return;
   }
-  let amount: bigint;
+  let amount: number;
   let walias: string;
   try {
-    amount = BigInt(qAmount);
+    amount = Number(qAmount);
     walias = validWalias(req.query['walias']);
   } catch (err: unknown) {
     res.status(422).send({ message: (err as Error).message });
@@ -88,7 +90,9 @@ async function handler<Context extends GameContext>(
     });
     return;
   }
-  if (!game.currentRound.roundPlayers.some((rp) => walias === rp.player.walias)) {
+  if (
+    !game.currentRound.roundPlayers.some((rp) => walias === rp.player.walias)
+  ) {
     res.status(409).send({ message: `${walias} is not playing this round` });
     return;
   }
