@@ -19,7 +19,7 @@ model Game {
   id String @id
 
   finalBlock  Int @map("final_block")
-  firstBlock  Int @map("first_block")
+  firstBlock  Int? @map("first_block")
   initialPool Int @map("initial_pool")
   minBet      Int @map("min_bet")
   ticketPrice Int @map("ticket_price")
@@ -27,16 +27,18 @@ model Game {
   currentBlock       Int    @map("current_block")
   currentPool        Int    @map("current_pool")
   currentRoundNumber Int    @map("current_round_number")
-  freezeDuration     Int    @map("freeze_duration")
-  nextFreeze         Int    @map("next_freeze")
-  nextMassacre       Int    @map("next_massacre")
-  roundLength        Int    @map("round_length")
+  freezeDuration     Int?    @map("freeze_duration")
+  nextFreeze         Int?    @map("next_freeze")
+  nextMassacre       Int?    @map("next_massacre")
+  roundLength        Int?    @map("round_length")
   status             Status
 
   currentRound Round    @relation(fields: [id, currentRoundNumber], references: [gameId, number])
   players      Player[] @relation
   rounds       Round[]  @relation("gameRounds")
   tickets      Ticket[] @relation
+
+  @@map("game")
 }
 
 model Round {
@@ -50,6 +52,7 @@ model Round {
   Game         Game[]
 
   @@unique([gameId, number])
+  @@map("round")
 }
 
 model Player {
@@ -70,6 +73,7 @@ model Player {
   roundPlayers RoundPlayer[] @relation
 
   @@unique([gameId, walias])
+  @@map("player")
 }
 
 model RoundPlayer {
@@ -85,6 +89,7 @@ model RoundPlayer {
   round  Round  @relation(fields: [roundId], references: [id])
 
   @@id([playerId, roundId])
+  @@map("round_player")
 }
 
 model Ticket {
@@ -97,4 +102,5 @@ model Ticket {
   player Player? @relation
 
   @@unique([gameId, walias])
+  @@map("ticket")
 }
