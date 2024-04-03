@@ -1,3 +1,5 @@
+## Published Events
+### Replaceable
 #### State
 
 ```json
@@ -27,6 +29,7 @@
 }
 ```
 
+### Regular
 #### Setup
 
 ```json
@@ -165,7 +168,8 @@
     "players": {
       "lud16": "amount",
       ...
-    }
+    },
+    "deadPlayers": ["<lud16>", "<lud16>" ...]
   }
  ...(id, pubkey, sig, created_at)
 ```
