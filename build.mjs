@@ -3,6 +3,8 @@
 import { writeFileSync } from 'fs';
 
 import { context, build } from 'esbuild';
+import tsPaths from 'esbuild-ts-paths';
+import { replaceTscAliasPaths } from 'tsc-alias';
 
 const buildOptions = {
   entryPoints: ['./src/**/*'],
@@ -15,9 +17,9 @@ const buildOptions = {
   tsconfig: './tsconfig.build.json',
   format: 'esm',
   outdir: './dist',
-  outExtension: { '.js': '.mjs' },
+  //outExtension: { '.js': '.mjs' },
   packages: 'external',
-  bundle: true,
+  plugins: [tsPaths()],
 };
 
 for (const arg of process.argv) {
@@ -25,10 +27,12 @@ for (const arg of process.argv) {
     case '-w':
     case '--watch':
       const ctx = await context(buildOptions);
+      replaceTscAliasPaths({resolveFullPaths: true, watch: true});
       await ctx.watch();
       break;
     default:
       const res = await build(buildOptions);
+      replaceTscAliasPaths({resolveFullPaths: true});
       writeFileSync('./dist/meta.json', JSON.stringify(res.metafile));
   }
 }

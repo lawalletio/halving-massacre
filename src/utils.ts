@@ -5,7 +5,7 @@ import NDK, {
   NDKEvent,
   NDKPrivateKeySigner,
   NostrEvent,
-} from 'node_modules/@nostr-dev-kit/ndk/dist';
+} from '@nostr-dev-kit/ndk';
 import { makeZapRequest } from 'nostr-tools/nip57';
 
 const log: Debugger = logger.extend('utils');
