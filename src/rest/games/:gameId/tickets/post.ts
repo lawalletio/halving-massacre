@@ -38,7 +38,7 @@ function validateBody(data: unknown): RequestBody {
   try {
     return { walias: validWalias(data.walias) };
   } catch (err: unknown) {
-    debug(err);
+    debug((err as Error).message);
     throw err;
   }
 }
@@ -166,21 +166,17 @@ async function handler<Context extends GameContext>(
   const walias = body.walias.toLowerCase();
   const game = await findGame(req.context.prisma, gameId, walias);
   if (!game) {
-    res
-      .status(404)
-      .send({
-        sucess: false,
-        message: `No running game found with id ${gameId}`,
-      });
+    res.status(404).send({
+      sucess: false,
+      message: `No running game found with id ${gameId}`,
+    });
     return;
   }
   if (!VALID_STATUSES.includes(game.status)) {
-    res
-      .status(409)
-      .send({
-        sucess: false,
-        message: 'This game is no longer accepting new players',
-      });
+    res.status(409).send({
+      sucess: false,
+      message: 'This game is no longer accepting new players',
+    });
     return;
   }
   if (

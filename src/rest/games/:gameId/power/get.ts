@@ -63,12 +63,10 @@ async function handler<Context extends GameContext>(
   }
   const qAmount = req.query['amount'];
   if (!qAmount || 'string' !== typeof qAmount) {
-    res
-      .status(422)
-      .send({
-        sucess: false,
-        message: 'Required query params amount and walias',
-      });
+    res.status(422).send({
+      sucess: false,
+      message: 'Required query params amount and walias',
+    });
     return;
   }
   let amount: number;
@@ -82,12 +80,10 @@ async function handler<Context extends GameContext>(
   }
   const game = await findGame(req.context.prisma, gameId, walias);
   if (!game) {
-    res
-      .status(404)
-      .send({
-        sucess: false,
-        message: `No running game found with id ${gameId}`,
-      });
+    res.status(404).send({
+      sucess: false,
+      message: `No running game found with id ${gameId}`,
+    });
     return;
   }
   if (!VALID_STATUSES.includes(game.status)) {
@@ -106,12 +102,10 @@ async function handler<Context extends GameContext>(
     return;
   }
   if (amount < game.minBet) {
-    res
-      .status(400)
-      .send({
-        sucess: false,
-        message: `Not enough power, min: ${game.minBet}`,
-      });
+    res.status(400).send({
+      sucess: false,
+      message: `Not enough power, min: ${game.minBet}`,
+    });
     return;
   }
   const eTag = randomBytes(32).toString('hex');
