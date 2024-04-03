@@ -55,7 +55,7 @@ model Round {
 model Player {
   id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   gameId String @map("game_id")
-  lud16  String
+  walias  String
 
   deathRoundId String? @map("death_round_id")
   maxZap       BigInt  @default(0) @map("max_zap")
@@ -69,7 +69,7 @@ model Player {
   ticket       Ticket        @relation(fields: [ticketId], references: [id])
   roundPlayers RoundPlayer[] @relation
 
-  @@unique([gameId, lud16])
+  @@unique([gameId, walias])
 }
 
 model RoundPlayer {
@@ -91,10 +91,10 @@ model Ticket {
   id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
   gameId String @map("game_id")
-  lud16  String
+  walias  String
 
   game   Game    @relation(fields: [gameId], references: [id])
   player Player? @relation
 
-  @@unique([gameId, lud16])
+  @@unique([gameId, walias])
 }

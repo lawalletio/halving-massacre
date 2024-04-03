@@ -1,5 +1,5 @@
 import { ExtendedRequest } from '@lawallet/module';
-import { ZapType, getInvoice, validLud16 } from '../../../../utils';
+import { ZapType, getInvoice, validWalias } from '../../../../utils';
 import type { Response } from 'express';
 import { GameContext } from '../../../../index';
 import { Prisma, PrismaClient, Status } from '@prisma/client';
@@ -13,7 +13,7 @@ const GAME_SELECT = Prisma.validator<Prisma.GameSelect>()({
   status: true,
   currentRound: {
     select: {
-      roundPlayers: { select: { player: { select: { lud16: true } } } },
+      roundPlayers: { select: { player: { select: { walias: true } } } },
     },
   },
 });
@@ -23,17 +23,17 @@ type GameInfo = Prisma.GameGetPayload<{
 }>;
 
 /**
- * Finds a game by id, also returns if the lud16 is already a player
+ * Finds a game by id, also returns if the walias is already a player
  *
  * @param prisma client
  * @param id of the game to search for
- * @param lud16 of the player we want to check
+ * @param walias of the player we want to check
  * @return the game info if preset or null
  */
 async function findGame(
   prisma: PrismaClient,
   id: string,
-  lud16: string,
+  walias: string,
 ): Promise<GameInfo | null> {
   return await prisma.game.findUnique({
     select: {
@@ -43,7 +43,7 @@ async function findGame(
           ...GAME_SELECT.currentRound.select,
           roundPlayers: {
             ...GAME_SELECT.currentRound.select.roundPlayers,
-            where: { player: { lud16 } },
+            where: { player: { walias } },
           },
         },
       },
@@ -63,19 +63,19 @@ async function handler<Context extends GameContext>(
   }
   const qAmount = req.query['amount'];
   if (!qAmount || 'string' !== typeof qAmount) {
-    res.status(422).send({ message: 'Required query params amount and lud16' });
+    res.status(422).send({ message: 'Required query params amount and walias' });
     return;
   }
   let amount: bigint;
-  let lud16: string;
+  let walias: string;
   try {
     amount = BigInt(qAmount);
-    lud16 = validLud16(req.query['lud16']);
+    walias = validWalias(req.query['walias']);
   } catch (err: unknown) {
     res.status(422).send({ message: (err as Error).message });
     return;
   }
-  const game = await findGame(req.context.prisma, gameId, lud16);
+  const game = await findGame(req.context.prisma, gameId, walias);
   if (!game) {
     res
       .status(404)
@@ -88,8 +88,8 @@ async function handler<Context extends GameContext>(
     });
     return;
   }
-  if (!game.currentRound.roundPlayers.some((rp) => lud16 === rp.player.lud16)) {
-    res.status(409).send({ message: `${lud16} is not playing this round` });
+  if (!game.currentRound.roundPlayers.some((rp) => walias === rp.player.walias)) {
+    res.status(409).send({ message: `${walias} is not playing this round` });
     return;
   }
   if (amount < game.minBet) {
@@ -100,7 +100,7 @@ async function handler<Context extends GameContext>(
   const content = {
     type: ZapType.POWER,
     gameId,
-    lud16,
+    walias,
   };
   let lud06Res;
   try {

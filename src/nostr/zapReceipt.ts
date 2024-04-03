@@ -42,16 +42,16 @@ async function addPower(
   zapReceiptId: string,
   ctx: GameContext,
 ): Promise<void> {
-  const { gameId, lud16 } = content;
+  const { gameId, walias } = content;
   const roundPlayer = await ctx.prisma.roundPlayer.findFirst({
     where: {
-      player: { lud16 },
+      player: { walias },
       round: { gameId },
     },
     orderBy: { round: { number: 'desc' } },
   });
   if (!roundPlayer) {
-    warn('%s is not a player alive on %$s', lud16, gameId);
+    warn('%s is not a player alive on %$s', walias, gameId);
     return;
   }
   const maxZap = amount < roundPlayer.maxZap ? roundPlayer.maxZap : amount;
@@ -95,7 +95,7 @@ async function addPower(
   const powerReceipt = powerReceiptEvent(
     game,
     amount.toString(),
-    lud16,
+    walias,
     zapReceiptId,
   );
   await Promise.all([
@@ -116,7 +116,7 @@ async function consumeTicket(
   const ticket = await ctx.prisma.ticket.findUnique({
     select: {
       id: true,
-      lud16: true,
+      walias: true,
       game: { select: { ticketPrice: true } },
     },
     where: { id: ticketId, player: { is: null } },
@@ -145,7 +145,7 @@ async function consumeTicket(
               player: {
                 create: {
                   gameId,
-                  lud16: ticket.lud16,
+                  walias: ticket.walias,
                   ticketId,
                   power: 1,
                 },
@@ -158,7 +158,7 @@ async function consumeTicket(
     select: GAME_STATE_SELECT,
     where: { id: gameId },
   });
-  const ticketE = ticketEvent(game, ticket.lud16, zapReceiptId);
+  const ticketE = ticketEvent(game, ticket.walias, zapReceiptId);
   await Promise.all([
     ctx.outbox.publish(ticketE),
     ctx.outbox.publish(
@@ -186,7 +186,7 @@ function validateContent(
     return null;
   }
   if (
-    !('lud16' in obj && 'string' === typeof obj.lud16) &&
+    !('walias' in obj && 'string' === typeof obj.walias) &&
     !('ticketId' in obj && 'string' === typeof obj.ticketId)
   ) {
     return null;

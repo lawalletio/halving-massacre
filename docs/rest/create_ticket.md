@@ -7,7 +7,7 @@ curl --request POST \
   --url http://https/<apiendpoint>/games/<gameId>/tickets \
   --header 'Content-Type: application/json' \
   --data '{
-  "lud16": "<username>@<domain>"
+  "walias": "<username>@<domain>"
 }'
 ```
 
@@ -23,11 +23,11 @@ curl --request POST \
 
 ```json
 {
-  "lud16": "<username>@<domain>"
+  "walias": "<username>@<domain>"
 }
 ```
 
-The body must be a json containing the lud16 of the user that will enter with the created ticket
+The body must be a json containing the walias of the user that will enter with the created ticket
 
 ## Response body
 

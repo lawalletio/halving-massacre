@@ -16,7 +16,7 @@
   "content": {
     "currentBlock": block_number,
     "players": {
-      "lud16": "amount",
+      "walias": "amount",
       ...
     },
     "nextFreeze": blockNumber,
@@ -61,11 +61,11 @@
     ["e", "<id>", "wss://relay.lawallet.ar", "zap-receipt"],
     ["L", "halving-massacre"],
     ["l", "ticket", "halving-massacre"],
-    ["i", "lud-16"],
+    ["i", "<walias>"],
     ["block", "current_block"]
   ],
   "content": {
-      "player": "lud-16"
+      "player": "walias"
   }
  ...(id, pubkey, sig, created_at)
 ```
@@ -80,13 +80,13 @@
     ["e", "<id>", "wss://relay.lawallet.ar", "zap-receipt"],
     ["L", "halving-massacre"],
     ["l", "power-receipt", "halving-massacre"],
-    ["i", "lud-16"],
+    ["i", "walias"],
     ["amount", "millisats"],
     ["block", "current_block"]
   ],
   "content": {
       "amount": "millisats",
-      "player": "lud-16"
+      "player": "walias"
   }
  ...(id, pubkey, sig, created_at)
 ```
@@ -123,7 +123,7 @@
   "content": {
     "currentBlock": block_number,
     "players": {
-      "lud16": "amount",
+      "walias": "amount",
       ...
     }
   }
@@ -166,10 +166,10 @@
       "merkleRoot": "merkle-root",
     }
     "players": {
-      "lud16": "amount",
+      "walias": "amount",
       ...
     },
-    "deadPlayers": ["<lud16>", "<lud16>" ...]
+    "deadPlayers": ["<walias>", "<walias>" ...]
   }
  ...(id, pubkey, sig, created_at)
 ```
@@ -193,7 +193,7 @@
       "height": number,
       "merkleRoot": "merkle-root",
     }
-    "survivor": "lud16",
+    "survivor": "walias",
     "totalPool": "millisats"
   }
  ...(id, pubkey, sig, created_at)

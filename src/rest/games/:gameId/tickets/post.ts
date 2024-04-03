@@ -3,7 +3,7 @@ import { type GameContext } from '../../../../index';
 import { Debugger } from 'debug';
 import type { Response } from 'express';
 import { Prisma, PrismaClient, Status } from '@prisma/client';
-import { LUD16_RE, ZapType, getInvoice, validLud16 } from '../../../../utils';
+import { WALIAS_RE, ZapType, getInvoice, validWalias } from '../../../../utils';
 import { createHash } from 'crypto';
 
 const log: Debugger = logger.extend('rest:game:gameId:ticket:post');
@@ -14,7 +14,7 @@ const warn: Debugger = log.extend('warn');
 const VALID_STATUSES: Status[] = [Status.SETUP, Status.INITIAL];
 
 type RequestBody = {
-  lud16: string;
+  walias: string;
 };
 
 /**
@@ -31,12 +31,12 @@ function validateBody(data: unknown): RequestBody {
     debug('Invalid body (null or not object)');
     throw new Error('Invalid body (null or not object)');
   }
-  if (!('lud16' in data)) {
-    debug('Missing lud16');
-    throw new Error('Missing property lud16');
+  if (!('walias' in data)) {
+    debug('Missing walias');
+    throw new Error('Missing property walias');
   }
   try {
-    return { lud16: validLud16(data.lud16) };
+    return { walias: validWalias(data.walias) };
   } catch (err: unknown) {
     debug(err);
     throw err;
@@ -46,11 +46,11 @@ function validateBody(data: unknown): RequestBody {
 /**
  * Checks if the domain returns a valid lud06 response for the user
  *
- * @param lud16 that we assume was previously validated as a valid address
- * @returns true if the domain returned a valid lud06 response false otherwise
+ * @param address that we assume was previously validated as a valid address
+ * @returns true if the domain returned a valid walias response false otherwise
  */
-async function isServerActive(lud16: string): Promise<boolean> {
-  const { username, domain } = lud16.match(LUD16_RE)!.groups as {
+async function isServerActive(address: string): Promise<boolean> {
+  const { username, domain } = address.match(WALIAS_RE)!.groups as {
     username: string;
     domain: string;
   };
@@ -58,11 +58,11 @@ async function isServerActive(lud16: string): Promise<boolean> {
   try {
     res = await fetch(`https://${domain}/.well-known/lnurlp/${username}`);
   } catch (err: unknown) {
-    warn('Error fetching %s: %O', lud16, err);
+    warn('Error fetching %s: %O', address, err);
     return false;
   }
   if (res.status < 200 || 300 <= res.status) {
-    log('lud16 request returned non success status %O', res.status);
+    log('walias request returned non success status %O', res.status);
     return false;
   }
   const body = await res.json();
@@ -87,25 +87,25 @@ async function isServerActive(lud16: string): Promise<boolean> {
 }
 
 /**
- * Generates a ticket for a lud16 in a given game
+ * Generates a ticket for a walias in a given game
  *
- * Only creates a new ticket if there is no ticket for that lud16 previously
+ * Only creates a new ticket if there is no ticket for that walias previously
  *
  * @param prisma client
  * @param gameId where the ticket will be created
- * @param lud16 for whom the ticket is
+ * @param walias for whom the ticket is
  * @return the id of the ticket
  */
 async function generateTicket(
   prisma: PrismaClient,
   gameId: string,
-  lud16: string,
+  walias: string,
 ): Promise<string> {
   const ticket = await prisma.ticket.upsert({
     select: { id: true },
-    create: { lud16, game: { connect: { id: gameId } } },
+    create: { walias, game: { connect: { id: gameId } } },
     update: {},
-    where: { gameId_lud16: { gameId, lud16 } },
+    where: { gameId_walias: { gameId, walias } },
   });
   return ticket.id;
 }
@@ -115,7 +115,7 @@ const GAME_SELECT = Prisma.validator<Prisma.GameSelect>()({
   ticketPrice: true,
   status: true,
   players: {
-    select: { lud16: true },
+    select: { walias: true },
   },
 });
 type GameInfo = Prisma.GameGetPayload<{
@@ -123,24 +123,24 @@ type GameInfo = Prisma.GameGetPayload<{
 }>;
 
 /**
- * Finds a game by id, also returns if the lud16 is already a player
+ * Finds a game by id, also returns if the walias is already a player
  *
  * @param prisma client
  * @param id of the game to search for
- * @param lud16 of the player we want to check
+ * @param walias of the player we want to check
  * @return the game info if preset or null
  */
 async function findGame(
   prisma: PrismaClient,
   id: string,
-  lud16: string,
+  walias: string,
 ): Promise<GameInfo | null> {
   return await prisma.game.findUnique({
     select: {
       ...GAME_SELECT,
       players: {
         ...GAME_SELECT.players,
-        where: { lud16 },
+        where: { walias },
       },
     },
     where: { id, NOT: { status: Status.FINAL } },
@@ -163,8 +163,8 @@ async function handler<Context extends GameContext>(
     res.status(422).send({ message: (err as Error).message });
     return;
   }
-  const lud16 = body.lud16.toLowerCase();
-  const game = await findGame(req.context.prisma, gameId, lud16);
+  const walias = body.walias.toLowerCase();
+  const game = await findGame(req.context.prisma, gameId, walias);
   if (!game) {
     res
       .status(404)
@@ -177,16 +177,16 @@ async function handler<Context extends GameContext>(
       .send({ message: 'This game is no longer accepting new players' });
     return;
   }
-  if (game.players.some((p) => lud16.toLowerCase() === p.lud16.toLowerCase())) {
-    res.status(409).send({ message: `${lud16} is already playing` });
+  if (game.players.some((p) => walias.toLowerCase() === p.walias.toLowerCase())) {
+    res.status(409).send({ message: `${walias} is already playing` });
     return;
   }
-  if (!(await isServerActive(lud16))) {
-    const message = `Server for ${lud16} does not handle lud16 correctly`;
+  if (!(await isServerActive(walias))) {
+    const message = `Server for ${walias} does not handle lud16 correctly`;
     res.status(400).json({ message }).send();
     return;
   }
-  const ticketId = await generateTicket(req.context.prisma, game.id, lud16);
+  const ticketId = await generateTicket(req.context.prisma, game.id, walias);
   const eTag = createHash('sha256').update(ticketId).digest('hex');
   const content = {
     type: ZapType.TICKET,

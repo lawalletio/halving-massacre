@@ -11,7 +11,7 @@ import { makeZapRequest } from 'nostr-tools/nip57';
 const log: Debugger = logger.extend('utils');
 const error: Debugger = log.extend('error');
 
-export const LUD16_RE =
+export const WALIAS_RE =
   /(?<username>^[A-Z0-9._-]{1,64})@(?<domain>(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63})$/i;
 const LUD06_CALLBACK = `${requiredEnvVar('BTC_GATEWAY_PUBLIC_KEY')}/lnurlp/${requiredEnvVar('NOSTR_PUBLIC_KEY')}/callback`;
 
@@ -29,7 +29,7 @@ export type ZapTicketContent = {
 export type ZapPowerContent = {
   type: ZapType.POWER;
   gameId: string;
-  lud16: string;
+  walias: string;
 };
 
 export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
@@ -43,7 +43,7 @@ export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
   currentRound: {
     select: {
       roundPlayers: {
-        select: { player: { select: { lud16: true, power: true } } },
+        select: { player: { select: { walias: true, power: true } } },
       },
     },
   },
@@ -65,7 +65,7 @@ export function gameStateEvent(
 ): NostrEvent {
   const { currentRound, ...rest } = game;
   const playerEntries = currentRound.roundPlayers.map((rp) => [
-    rp.player.lud16,
+    rp.player.walias,
     rp.player.power.toString(),
   ]);
   const players = Object.fromEntries(playerEntries) as Record<string, string>;
@@ -94,19 +94,19 @@ export function gameStateEvent(
  *
  * @param game state
  * @param amount being added to the power
- * @param lud16 who added the power
+ * @param walias who added the power
  * @param zapReceiptId that added the power
  * @return the power receipt event
  */
 export function powerReceiptEvent(
   game: Pick<GameStateData, 'id' | 'currentBlock'>,
   amount: string,
-  lud16: string,
+  walias: string,
   zapReceiptId: string,
 ): NostrEvent {
   const content = JSON.stringify({
     amount,
-    player: lud16,
+    player: walias,
   });
   return {
     content,
@@ -117,7 +117,7 @@ export function powerReceiptEvent(
       ['e', zapReceiptId, '', 'zap-receipt'],
       ['L', 'halving-massacre'],
       ['l', 'power-receipt', 'halving-massacre'],
-      ['i', lud16],
+      ['i', walias],
       ['amount', amount],
       ['block', game.currentBlock.toString()],
     ],
@@ -129,16 +129,16 @@ export function powerReceiptEvent(
  * Generate the event for a ticket
  *
  * @param game state
- * @param lud16 who bought the ticket
+ * @param walias who bought the ticket
  * @param zapReceiptId that paid for the ticket
  * @return the ticket event
  */
 export function ticketEvent(
   game: Pick<GameStateData, 'id' | 'currentBlock'>,
-  lud16: string,
+  walias: string,
   zapReceiptId: string,
 ): NostrEvent {
-  const content = JSON.stringify({ player: lud16 });
+  const content = JSON.stringify({ player: walias });
   return {
     content,
     pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
@@ -148,7 +148,7 @@ export function ticketEvent(
       ['e', zapReceiptId, '', 'zap-receipt'],
       ['L', 'halving-massacre'],
       ['l', 'ticket', 'halving-massacre'],
-      ['i', lud16],
+      ['i', walias],
       ['block', game.currentBlock.toString()],
     ],
     created_at: nowInSeconds(),
@@ -161,18 +161,18 @@ export type Lud06Response = {
 };
 
 /**
- * Validates that a given input is a valid lud16
+ * Validates that a given input is a valid walias
  *
  * @param input to be validated
- * @return the lud16 string if it was valid
- * @throws Error if the input was not a valid lud16 address
+ * @return the walias string if it was valid
+ * @throws Error if the input was not a valid walias address
  */
-export function validLud16(input: unknown): string {
+export function validWalias(input: unknown): string {
   if ('string' !== typeof input) {
-    throw new Error('lud16 must be a string');
+    throw new Error('walias must be a string');
   }
-  if (254 < input.length || !LUD16_RE.test(input)) {
-    throw new Error('lud16 must be a valid internet identifier');
+  if (254 < input.length || !WALIAS_RE.test(input)) {
+    throw new Error('walias must be a valid internet identifier');
   }
   return input;
 }
@@ -229,7 +229,7 @@ export async function getInvoice(
     throw new Error('Error generating invoice');
   }
   if (res.status < 200 || 300 <= res.status) {
-    error('lud16 request returned non success status %O', res);
+    error('lud06 request returned non success status %O', res);
     throw new Error('Error generating invoice');
   }
   return (await res.json()) as Lud06Response;
