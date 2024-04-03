@@ -57,7 +57,6 @@ model Player {
   gameId String @map("game_id")
   lud16  String
 
-  amount       BigInt  @default(0)
   deathRoundId String? @map("death_round_id")
   maxZap       BigInt  @default(0) @map("max_zap")
   power        BigInt  @default(0)

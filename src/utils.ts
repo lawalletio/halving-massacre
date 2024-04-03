@@ -108,6 +108,36 @@ export function powerReceiptEvent(
   };
 }
 
+/**
+ * Generate the event for a ticket
+ *
+ * @param game state
+ * @param lud16 who bought the ticket
+ * @param zapReceiptId that paid for the ticket
+ * @return the ticket event
+ */
+export function ticketEvent(
+  game: Pick<GameStateData, 'id' | 'currentBlock'>,
+  lud16: string,
+  zapReceiptId: string,
+): NostrEvent {
+  const content = JSON.stringify({ player: lud16 });
+  return {
+    content,
+    pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
+    kind: Kind.REGULAR,
+    tags: [
+      ['e', game.id, '', 'setup'],
+      ['e', zapReceiptId, '', 'zap-receipt'],
+      ['L', 'halving-massacre'],
+      ['l', 'ticket', 'halving-massacre'],
+      ['i', lud16],
+      ['block', game.currentBlock.toString()],
+    ],
+    created_at: nowInSeconds(),
+  };
+}
+
 export type Lud06Response = {
   pr: string;
   routes: never[];
