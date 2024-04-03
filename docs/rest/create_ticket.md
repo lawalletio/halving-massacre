@@ -35,6 +35,7 @@ The body must be a json containing the walias of the user that will enter with t
 
 ```json
 {
+  "success": true,
   "pr": "<bolt11 invoice>",
   "routes": [],
   "eTag": "<string that will be published ad zapReceipt eTag>"
@@ -47,6 +48,7 @@ The success response will be a valid lud06 response with the invoice in the `pr`
 
 ```json
 {
+  "success": false,
   "message": "<Error message>"
 }
 ```

@@ -58,14 +58,17 @@ async function handler<Context extends GameContext>(
 ) {
   const gameId = req.params['gameId'];
   if (!gameId) {
-    res.status(404).json({ message: 'Invalid gameId' }).send();
+    res.status(404).json({ sucess: false, message: 'Invalid gameId' }).send();
     return;
   }
   const qAmount = req.query['amount'];
   if (!qAmount || 'string' !== typeof qAmount) {
     res
       .status(422)
-      .send({ message: 'Required query params amount and walias' });
+      .send({
+        sucess: false,
+        message: 'Required query params amount and walias',
+      });
     return;
   }
   let amount: number;
@@ -74,18 +77,22 @@ async function handler<Context extends GameContext>(
     amount = Number(qAmount);
     walias = validWalias(req.query['walias']);
   } catch (err: unknown) {
-    res.status(422).send({ message: (err as Error).message });
+    res.status(422).send({ sucess: false, message: (err as Error).message });
     return;
   }
   const game = await findGame(req.context.prisma, gameId, walias);
   if (!game) {
     res
       .status(404)
-      .send({ message: `No running game found with id ${gameId}` });
+      .send({
+        sucess: false,
+        message: `No running game found with id ${gameId}`,
+      });
     return;
   }
   if (!VALID_STATUSES.includes(game.status)) {
     res.status(409).send({
+      sucess: false,
       message: `This game is not accepting power wait for block: ${game.nextMassacre}`,
     });
     return;
@@ -93,11 +100,18 @@ async function handler<Context extends GameContext>(
   if (
     !game.currentRound.roundPlayers.some((rp) => walias === rp.player.walias)
   ) {
-    res.status(409).send({ message: `${walias} is not playing this round` });
+    res
+      .status(409)
+      .send({ sucess: false, message: `${walias} is not playing this round` });
     return;
   }
   if (amount < game.minBet) {
-    res.status(400).send({ message: `Not enough power, min: ${game.minBet}` });
+    res
+      .status(400)
+      .send({
+        sucess: false,
+        message: `Not enough power, min: ${game.minBet}`,
+      });
     return;
   }
   const eTag = randomBytes(32).toString('hex');
@@ -111,12 +125,12 @@ async function handler<Context extends GameContext>(
     lud06Res = await getInvoice(eTag, amount, JSON.stringify(content));
   } catch (err: unknown) {
     const message = (err as Error).message;
-    res.status(500).json({ message }).send();
+    res.status(500).json({ sucess: false, message }).send();
     return;
   }
   res
     .status(200)
-    .json({ eTag, ...lud06Res })
+    .json({ sucess: true, eTag, ...lud06Res })
     .send();
 }
 

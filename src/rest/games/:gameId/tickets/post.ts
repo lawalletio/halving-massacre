@@ -153,14 +153,14 @@ async function handler<Context extends GameContext>(
 ) {
   const gameId = req.params['gameId'];
   if (!gameId) {
-    res.status(404).json({ message: 'Invalid gameId' }).send();
+    res.status(404).json({ sucess: false, message: 'Invalid gameId' }).send();
     return;
   }
   let body: RequestBody;
   try {
     body = validateBody(req.body);
   } catch (err: unknown) {
-    res.status(422).send({ message: (err as Error).message });
+    res.status(422).send({ sucess: false, message: (err as Error).message });
     return;
   }
   const walias = body.walias.toLowerCase();
@@ -168,24 +168,32 @@ async function handler<Context extends GameContext>(
   if (!game) {
     res
       .status(404)
-      .send({ message: `No running game found with id ${gameId}` });
+      .send({
+        sucess: false,
+        message: `No running game found with id ${gameId}`,
+      });
     return;
   }
   if (!VALID_STATUSES.includes(game.status)) {
     res
       .status(409)
-      .send({ message: 'This game is no longer accepting new players' });
+      .send({
+        sucess: false,
+        message: 'This game is no longer accepting new players',
+      });
     return;
   }
   if (
     game.players.some((p) => walias.toLowerCase() === p.walias.toLowerCase())
   ) {
-    res.status(409).send({ message: `${walias} is already playing` });
+    res
+      .status(409)
+      .send({ sucess: false, message: `${walias} is already playing` });
     return;
   }
   if (!(await isServerActive(walias))) {
     const message = `Server for ${walias} does not handle lud16 correctly`;
-    res.status(400).json({ message }).send();
+    res.status(400).json({ sucess: false, message }).send();
     return;
   }
   const ticketId = await generateTicket(req.context.prisma, game.id, walias);
@@ -204,12 +212,12 @@ async function handler<Context extends GameContext>(
     );
   } catch (err: unknown) {
     const message = (err as Error).message;
-    res.status(500).json({ message }).send();
+    res.status(500).json({ sucess: false, message }).send();
     return;
   }
   res
     .status(200)
-    .json({ eTag, ...lud06Res })
+    .json({ sucess: true, eTag, ...lud06Res })
     .send();
 }
 
