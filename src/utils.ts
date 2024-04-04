@@ -44,6 +44,7 @@ export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
     select: {
       roundPlayers: {
         select: { player: { select: { walias: true, power: true } } },
+        orderBy: { player: { power: Prisma.SortOrder.desc} },
       },
     },
   },
