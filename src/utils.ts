@@ -191,12 +191,12 @@ async function signedZapRequest(
   comment: string,
 ): Promise<NostrEvent> {
   const zr = makeZapRequest({
-    profile: requiredEnvVar('BTC_GATEWAY_PUBLIC_KEY'),
+    profile: requiredEnvVar('NOSTR_PUBLIC_KEY'),
     event,
     amount,
     comment,
     //TODO
-    relays: [],
+    relays: [requiredEnvVar('NOSTR_RELAYS')],
   });
   const pubkey = requiredEnvVar('NOSTR_PUBLIC_KEY');
   const signer = new NDKPrivateKeySigner(requiredEnvVar('NOSTR_PRIVATE_KEY'));
@@ -218,11 +218,11 @@ export async function getInvoice(
   amount: number,
   comment: string,
 ): Promise<Lud06Response> {
-  const zr = signedZapRequest(Number(amount), eventId, comment);
+  const zr = await signedZapRequest(Number(amount), eventId, comment);
   let res;
   try {
     res = await fetch(
-      `${LUD06_CALLBACK}?amount=${amount.toString()}&comment=${comment}&zr=${JSON.stringify(zr)}`,
+      `${LUD06_CALLBACK}?amount=${amount.toString()}&comment=${comment}&nostr=${JSON.stringify(zr)}`,
     );
   } catch (err: unknown) {
     error('Error generating invoice: %O', err);
