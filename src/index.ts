@@ -6,6 +6,7 @@ import {
 } from '@lawallet/module';
 import NDK, { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
 import { PrismaClient } from '@prisma/client';
+import { WebSocket } from 'ws';
 
 export type GameContext = {
   prisma: PrismaClient;
@@ -42,6 +43,19 @@ const module = Module.build<GameContext>({
   restPath: `${import.meta.dirname}/rest`,
   writeNDK,
   readNDK,
+});
+
+const ws = new WebSocket(requiredEnvVar('MEMPOOL_WS_URL'));
+ws.on('open', () => {
+  ws.send(JSON.stringify({ action: 'want', data: ['blocks'] }));
+});
+
+ws.on('message', (data: Buffer) => {
+  const message: object = JSON.parse(data.toString('utf8'));
+  if ('blocks' in message) {
+  }
+  if ('block' in message) {
+  }
 });
 
 void module.start();
