@@ -42,7 +42,7 @@ const POWER_GIFT = 21000;
 async function addPower(
   content: ZapPowerContent,
   amount: number,
-  zapReceiptId: string,
+  zapReceiptEvent: NostrEvent,
   ctx: GameContext,
 ): Promise<void> {
   const { gameId, walias } = content;
@@ -58,6 +58,7 @@ async function addPower(
     return;
   }
   const maxZap = amount < roundPlayer.maxZap ? roundPlayer.maxZap : amount;
+  const zapReceiptId = zapReceiptEvent.id!;
   const game = await ctx.prisma.game.update({
     data: {
       currentPool: { increment: amount },
@@ -95,19 +96,29 @@ async function addPower(
     select: GAME_STATE_SELECT,
     where: { id: gameId },
   });
-  const powerReceipt = powerReceiptEvent(game, amount, walias, zapReceiptId);
-  await Promise.all([
+  const powerReceipt = powerReceiptEvent(
+    game,
+    amount,
+    walias,
+    zapReceiptEvent.id!,
+  );
+  await Promise.allSettled([
     ctx.outbox.publish(powerReceipt),
     ctx.outbox.publish(
       gameStateEvent(game, getEventHash(powerReceipt as UnsignedEvent)),
     ),
-  ]);
+  ]).then(async (results) => {
+    log('Publish results: %O', results);
+    if ('rejected' === results[0].status) {
+      await republishEvents(zapReceiptEvent, ctx);
+    }
+  });
 }
 
 async function consumeTicket(
   content: ZapTicketContent,
   amount: number,
-  zapReceiptId: string,
+  zapReceiptEvent: NostrEvent,
   ctx: GameContext,
 ): Promise<void> {
   const { gameId, ticketId } = content;
@@ -132,6 +143,7 @@ async function consumeTicket(
     );
     return;
   }
+  const zapReceiptId = zapReceiptEvent.id!;
   const game = await ctx.prisma.game.update({
     data: {
       currentPool: { increment: ticket.game.ticketPrice },
@@ -163,13 +175,18 @@ async function consumeTicket(
     ticket.walias,
     zapReceiptId,
   );
-  await Promise.all([
+  await Promise.allSettled([
     ctx.outbox.publish(ticketE),
     ctx.outbox.publish(powerReceipt),
     ctx.outbox.publish(
       gameStateEvent(game, getEventHash(ticketE as UnsignedEvent)),
     ),
-  ]);
+  ]).then(async (results) => {
+    log('Publis results: %O', results);
+    if ('rejected' === results[0].status) {
+      await republishEvents(zapReceiptEvent, ctx);
+    }
+  });
 }
 
 function validateContent(
@@ -199,14 +216,67 @@ function validateContent(
   return obj as ZapTicketContent | ZapPowerContent;
 }
 
+async function republishEvents(
+  zapReceiptEvent: NostrEvent,
+  ctx: GameContext,
+): Promise<void> {
+  log('Did not published event, publishing...');
+  const zapRequest = JSON.parse(
+    getTagValue(zapReceiptEvent, 'description')!,
+  ) as NostrEvent;
+  let content = validateContent(zapRequest.content)!;
+  const game = await ctx.prisma.game.findUnique({
+    select: GAME_STATE_SELECT,
+    where: { id: content.gameId },
+  });
+  const amount = Number(getTagValue(zapRequest, 'amount'));
+  switch (content.type.toUpperCase()) {
+    case ZapType.TICKET.valueOf(): {
+      content = content as ZapTicketContent;
+      const ticket = await ctx.prisma.ticket.findUnique({
+        select: { walias: true },
+        where: { id: content.ticketId },
+      });
+      const ticketE = ticketEvent(game!, ticket!.walias, zapReceiptEvent.id!);
+      await ctx.outbox.publish(ticketE);
+      debug('Published ticket event correctly');
+      break;
+    }
+    case ZapType.POWER.valueOf(): {
+      content = content as ZapPowerContent;
+      const powerReceipt = powerReceiptEvent(
+        game!,
+        amount,
+        content.walias,
+        zapReceiptEvent.id!,
+      );
+      await ctx.outbox.publish(powerReceipt);
+      debug('Published power event correctly');
+      break;
+    }
+    default:
+      error('Invalid type: %s', content.type.toUpperCase());
+      break;
+  }
+  return;
+}
+
 function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
   return async (event: NostrEvent): Promise<void> => {
     const exists = await ctx.prisma.roundPlayer.findFirst({
       where: { zapReceipts: { has: event.id! } },
     });
     if (exists) {
-      log(`Already handled zap receipt ${event.id}`);
-      return;
+      log(
+        `Already handled zap receipt ${event.id}, checking if event as published`,
+      );
+      const pubEvent = await ctx.writeNDK.fetchEvent({ '#e': [event.id!] });
+      if (pubEvent) {
+        log('Already published event: %s', pubEvent.id);
+        return;
+      } else {
+        await republishEvents(event, ctx);
+      }
     }
     debug('Received event %s', event.id);
     const strZapRequest = getTagValue(event, 'description');
@@ -232,17 +302,12 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
     switch (content.type.toUpperCase()) {
       case ZapType.TICKET.valueOf():
         debug('Consuming ticket: %O', content);
-        await consumeTicket(
-          content as ZapTicketContent,
-          amount,
-          event.id!,
-          ctx,
-        );
+        await consumeTicket(content as ZapTicketContent, amount, event, ctx);
         debug('Published ticket events correctly');
         break;
       case ZapType.POWER.valueOf():
         debug('Adding power: %O', content);
-        await addPower(content as ZapPowerContent, amount, event.id!, ctx);
+        await addPower(content as ZapPowerContent, amount, event, ctx);
         debug('Published power events correctly');
         break;
       default:
