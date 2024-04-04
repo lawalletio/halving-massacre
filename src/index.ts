@@ -58,4 +58,17 @@ ws.on('message', (data: Buffer) => {
   }
 });
 
+const ws = new WebSocket(requiredEnvVar('MEMPOOL_WS_URL'));
+ws.on('open', () => {
+  ws.send(JSON.stringify({ action: 'want', data: ['blocks'] }));
+});
+
+ws.on('message', (data: Buffer) => {
+  const message: object = JSON.parse(data.toString('utf8'));
+  if ('blocks' in message) {
+  }
+  if ('block' in message) {
+  }
+});
+
 void module.start();
