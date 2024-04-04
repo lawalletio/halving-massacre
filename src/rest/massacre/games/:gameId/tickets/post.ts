@@ -153,28 +153,28 @@ async function handler<Context extends GameContext>(
 ) {
   const gameId = req.params['gameId'];
   if (!gameId) {
-    res.status(404).json({ sucess: false, message: 'Invalid gameId' }).send();
+    res.status(404).json({ success: false, message: 'Invalid gameId' }).send();
     return;
   }
   let body: RequestBody;
   try {
     body = validateBody(req.body);
   } catch (err: unknown) {
-    res.status(422).send({ sucess: false, message: (err as Error).message });
+    res.status(422).send({ success: false, message: (err as Error).message });
     return;
   }
   const walias = body.walias.toLowerCase();
   const game = await findGame(req.context.prisma, gameId, walias);
   if (!game) {
     res.status(404).send({
-      sucess: false,
+      success: false,
       message: `No running game found with id ${gameId}`,
     });
     return;
   }
   if (!VALID_STATUSES.includes(game.status)) {
     res.status(409).send({
-      sucess: false,
+      success: false,
       message: 'This game is no longer accepting new players',
     });
     return;
@@ -184,12 +184,12 @@ async function handler<Context extends GameContext>(
   ) {
     res
       .status(409)
-      .send({ sucess: false, message: `${walias} is already playing` });
+      .send({ success: false, message: `${walias} is already playing` });
     return;
   }
   if (!(await isServerActive(walias))) {
     const message = `Server for ${walias} does not handle lud16 correctly`;
-    res.status(400).json({ sucess: false, message }).send();
+    res.status(400).json({ success: false, message }).send();
     return;
   }
   const ticketId = await generateTicket(req.context.prisma, game.id, walias);
@@ -208,12 +208,12 @@ async function handler<Context extends GameContext>(
     );
   } catch (err: unknown) {
     const message = (err as Error).message;
-    res.status(500).json({ sucess: false, message }).send();
+    res.status(500).json({ success: false, message }).send();
     return;
   }
   res
     .status(200)
-    .json({ sucess: true, eTag, ...lud06Res })
+    .json({ success: true, eTag, ...lud06Res })
     .send();
 }
 

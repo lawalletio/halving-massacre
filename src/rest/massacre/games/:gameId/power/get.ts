@@ -58,13 +58,13 @@ async function handler<Context extends GameContext>(
 ) {
   const gameId = req.params['gameId'];
   if (!gameId) {
-    res.status(404).json({ sucess: false, message: 'Invalid gameId' }).send();
+    res.status(404).json({ success: false, message: 'Invalid gameId' }).send();
     return;
   }
   const qAmount = req.query['amount'];
   if (!qAmount || 'string' !== typeof qAmount) {
     res.status(422).send({
-      sucess: false,
+      success: false,
       message: 'Required query params amount and walias',
     });
     return;
@@ -75,20 +75,20 @@ async function handler<Context extends GameContext>(
     amount = Number(qAmount);
     walias = validWalias(req.query['walias']);
   } catch (err: unknown) {
-    res.status(422).send({ sucess: false, message: (err as Error).message });
+    res.status(422).send({ success: false, message: (err as Error).message });
     return;
   }
   const game = await findGame(req.context.prisma, gameId, walias);
   if (!game) {
     res.status(404).send({
-      sucess: false,
+      success: false,
       message: `No running game found with id ${gameId}`,
     });
     return;
   }
   if (!VALID_STATUSES.includes(game.status)) {
     res.status(409).send({
-      sucess: false,
+      success: false,
       message: `This game is not accepting power wait for block: ${game.nextMassacre}`,
     });
     return;
@@ -98,12 +98,12 @@ async function handler<Context extends GameContext>(
   ) {
     res
       .status(409)
-      .send({ sucess: false, message: `${walias} is not playing this round` });
+      .send({ success: false, message: `${walias} is not playing this round` });
     return;
   }
   if (amount < game.minBet) {
     res.status(400).send({
-      sucess: false,
+      success: false,
       message: `Not enough power, min: ${game.minBet}`,
     });
     return;
@@ -119,12 +119,12 @@ async function handler<Context extends GameContext>(
     lud06Res = await getInvoice(eTag, amount, JSON.stringify(content));
   } catch (err: unknown) {
     const message = (err as Error).message;
-    res.status(500).json({ sucess: false, message }).send();
+    res.status(500).json({ success: false, message }).send();
     return;
   }
   res
     .status(200)
-    .json({ sucess: true, eTag, ...lud06Res })
+    .json({ success: true, eTag, ...lud06Res })
     .send();
 }
 
