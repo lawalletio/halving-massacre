@@ -270,7 +270,11 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
       log(
         `Already handled zap receipt ${event.id}, checking if event as published`,
       );
-      const pubEvent = await ctx.writeNDK.fetchEvent({ '#e': [event.id!] });
+      const pubEvent = await ctx.writeNDK.fetchEvent({
+        authors: [requiredEnvVar('NOSTR_PUBLIC_KEY')],
+        '#e': [event.id!],
+        '#l': ['ticket', 'power-receipt'],
+      });
       if (pubEvent) {
         log('Already published event: %s', pubEvent.id);
       } else {
