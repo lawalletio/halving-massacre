@@ -129,6 +129,7 @@ async function consumeTicket(
     );
     return;
   }
+  const onePower = 1;
   const game = await ctx.prisma.game.update({
     data: {
       currentPool: { increment: ticket.game.ticketPrice },
@@ -142,7 +143,7 @@ async function consumeTicket(
                   gameId,
                   walias: ticket.walias,
                   ticketId,
-                  power: 1,
+                  power: onePower,
                 },
               },
             },
@@ -154,8 +155,15 @@ async function consumeTicket(
     where: { id: gameId },
   });
   const ticketE = ticketEvent(game, ticket.walias, zapReceiptId);
+  const powerReceipt = powerReceiptEvent(
+    game,
+    onePower,
+    ticket.walias,
+    zapReceiptId,
+  );
   await Promise.all([
     ctx.outbox.publish(ticketE),
+    ctx.outbox.publish(powerReceipt),
     ctx.outbox.publish(
       gameStateEvent(game, getEventHash(ticketE as UnsignedEvent)),
     ),
