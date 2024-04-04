@@ -37,6 +37,8 @@ const filter: NDKFilter = {
   until: Math.floor(Date.now() / 1000) + 86000,
 };
 
+const POWER_GIFT = 21000;
+
 async function addPower(
   content: ZapPowerContent,
   amount: number,
@@ -130,7 +132,6 @@ async function consumeTicket(
     );
     return;
   }
-  const onePower = 1;
   const game = await ctx.prisma.game.update({
     data: {
       currentPool: { increment: ticket.game.ticketPrice },
@@ -144,7 +145,7 @@ async function consumeTicket(
                   gameId,
                   walias: ticket.walias,
                   ticketId,
-                  power: onePower,
+                  power: POWER_GIFT,
                 },
               },
             },
@@ -158,7 +159,7 @@ async function consumeTicket(
   const ticketE = ticketEvent(game, ticket.walias, zapReceiptId);
   const powerReceipt = powerReceiptEvent(
     game,
-    onePower,
+    POWER_GIFT,
     ticket.walias,
     zapReceiptId,
   );
