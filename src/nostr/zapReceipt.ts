@@ -27,6 +27,7 @@ import { Debugger } from 'debug';
 const log: Debugger = logger.extend('nostr:zapReceipt');
 const warn: Debugger = log.extend('warn');
 const error: Debugger = log.extend('error');
+const debug: Debugger = log.extend('debug');
 
 const filter: NDKFilter = {
   kinds: [9735],
@@ -206,6 +207,7 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
       log(`Already handled zap receipt ${event.id}`);
       return;
     }
+    debug('Received event %s', event.id);
     const strZapRequest = getTagValue(event, 'description');
     if (!strZapRequest) {
       warn('INVALID ZAP RECEIPT, NEED DESCRIPTION %O', event.id);
@@ -228,15 +230,19 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
     const amount = Number(getTagValue(zapRequest, 'amount'));
     switch (content.type.toUpperCase()) {
       case ZapType.TICKET.valueOf():
+        debug('Consuming ticket: %O', content);
         await consumeTicket(
           content as ZapTicketContent,
           amount,
           event.id!,
           ctx,
         );
+        debug('Published ticket events correctly');
         break;
       case ZapType.POWER.valueOf():
+        debug('Adding power: %O', content);
         await addPower(content as ZapPowerContent, amount, event.id!, ctx);
+        debug('Published power events correctly');
         break;
       default:
         error('Invalid type: %s', content.type.toUpperCase());
