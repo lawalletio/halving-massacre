@@ -1,9 +1,9 @@
 import { ExtendedRequest, logger } from '@lawallet/module';
-import { type GameContext } from '../../../../index';
+import { type GameContext } from '@src/index';
 import { Debugger } from 'debug';
 import type { Response } from 'express';
 import { Prisma, PrismaClient, Status } from '@prisma/client';
-import { WALIAS_RE, ZapType, getInvoice, validWalias } from '../../../../utils';
+import { WALIAS_RE, ZapType, getInvoice, validWalias } from '@src/utils';
 import { createHash } from 'crypto';
 
 const log: Debugger = logger.extend('rest:game:gameId:ticket:post');

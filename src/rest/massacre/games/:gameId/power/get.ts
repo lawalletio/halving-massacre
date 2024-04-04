@@ -1,7 +1,7 @@
 import { ExtendedRequest } from '@lawallet/module';
-import { ZapType, getInvoice, validWalias } from '../../../../utils';
+import { ZapType, getInvoice, validWalias } from '@src/utils';
 import type { Response } from 'express';
-import { GameContext } from '../../../../index';
+import { GameContext } from '@src/index';
 import { Prisma, PrismaClient, Status } from '@prisma/client';
 import { randomBytes } from 'crypto';
 
