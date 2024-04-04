@@ -273,10 +273,10 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
       const pubEvent = await ctx.writeNDK.fetchEvent({ '#e': [event.id!] });
       if (pubEvent) {
         log('Already published event: %s', pubEvent.id);
-        return;
       } else {
         await republishEvents(event, ctx);
       }
+      return;
     }
     debug('Received event %s', event.id);
     const strZapRequest = getTagValue(event, 'description');
