@@ -6,7 +6,7 @@
 {
   "kind": 31111,
   "tags": [
-    ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
+    ["e", "<id>", "wss://relay.lawallet.ar", "state"],
     ["e", "<id>", "wss://relay.lawallet.ar", "<last_modified>"],
     ["d", "state:<setup_id>"],
     ["L", "halving-massacre"],
@@ -15,7 +15,7 @@
   ],
   "content": {
     "currentBlock": block_number,
-    "players": {
+    "top100Players": {
       "walias": power_amount,
       ...
     },
@@ -24,6 +24,7 @@
     "status": "SETUP" | "INITIAL" | "NORMAL" | "FREEZE" | "FINAL"
     "roundLength": number,
     "freezeDuration": number,
+    "playerCount": number_of_players
  },
  ...(id, pubkey, sig, created_at)
 }

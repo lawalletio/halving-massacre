@@ -17,7 +17,7 @@ const writeNDK = new NDK({
   explicitRelayUrls: requiredEnvVar('NOSTR_WRITE_RELAYS')
     .split(',')
     .map((r) =>
-      'wss://relay.hodl.ar' === r ? requiredEnvVar('LAWALLET_RELAY') : r,
+      'wss://relay.lawallet.ar' === r ? requiredEnvVar('LAWALLET_RELAY') : r,
     ),
   signer: new NDKPrivateKeySigner(requiredEnvVar('NOSTR_PRIVATE_KEY')),
 });
@@ -26,7 +26,7 @@ const readNDK = new NDK({
   explicitRelayUrls: requiredEnvVar('NOSTR_RELAYS')
     .split(',')
     .map((r) =>
-      'wss://relay.hodl.ar' === r ? requiredEnvVar('LAWALLET_RELAY') : r,
+      'wss://relay.lawallet.ar' === r ? requiredEnvVar('LAWALLET_RELAY') : r,
     ),
 });
 

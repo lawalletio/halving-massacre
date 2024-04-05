@@ -45,9 +45,11 @@ export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
       roundPlayers: {
         select: { player: { select: { walias: true, power: true } } },
         orderBy: { player: { power: Prisma.SortOrder.desc } },
+        take: 100,
       },
     },
   },
+  _count: { select: { players: true } },
 });
 export type GameStateData = Prisma.GameGetPayload<{
   select: typeof GAME_STATE_SELECT;
@@ -69,10 +71,14 @@ export function gameStateEvent(
     rp.player.walias,
     rp.player.power,
   ]);
-  const players = Object.fromEntries(playerEntries) as Record<string, string>;
+  const top100Players = Object.fromEntries(playerEntries) as Record<
+    string,
+    string
+  >;
   const content = JSON.stringify({
     ...rest,
-    players,
+    top100Players,
+    playerCount: game._count.players,
   });
   return {
     content,
