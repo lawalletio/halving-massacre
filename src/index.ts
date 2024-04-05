@@ -1,7 +1,6 @@
 import {
   Module,
   DefaultContext,
-  getWriteNDK,
   DirectOutbox,
   requiredEnvVar,
 } from '@lawallet/module';
@@ -31,7 +30,7 @@ const readNDK = new NDK({
 });
 
 const context: GameContext = {
-  outbox: new DirectOutbox(getWriteNDK()),
+  outbox: new DirectOutbox(writeNDK),
   prisma: new PrismaClient(),
   writeNDK,
 };
