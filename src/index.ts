@@ -5,7 +5,7 @@ import {
   DirectOutbox,
   requiredEnvVar,
 } from '@lawallet/module';
-import NDK from '@nostr-dev-kit/ndk';
+import NDK, { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
 import { PrismaClient } from '@prisma/client';
 
 export type GameContext = {
@@ -13,7 +13,22 @@ export type GameContext = {
   writeNDK: NDK;
 } & DefaultContext;
 
-const writeNDK = getWriteNDK();
+const writeNDK = new NDK({
+  explicitRelayUrls: requiredEnvVar('NOSTR_WRITE_RELAYS')
+    .split(',')
+    .map((r) =>
+      'wss://relay.hodl.ar' === r ? requiredEnvVar('LAWALLET_RELAY') : r,
+    ),
+  signer: new NDKPrivateKeySigner(requiredEnvVar('NOSTR_PRIVATE_KEY')),
+});
+
+const readNDK = new NDK({
+  explicitRelayUrls: requiredEnvVar('NOSTR_RELAYS')
+    .split(',')
+    .map((r) =>
+      'wss://relay.hodl.ar' === r ? requiredEnvVar('LAWALLET_RELAY') : r,
+    ),
+});
 
 const context: GameContext = {
   outbox: new DirectOutbox(getWriteNDK()),
@@ -27,6 +42,7 @@ const module = Module.build<GameContext>({
   port: Number(requiredEnvVar('PORT')),
   restPath: `${import.meta.dirname}/rest`,
   writeNDK,
+  readNDK,
 });
 
 void module.start();
