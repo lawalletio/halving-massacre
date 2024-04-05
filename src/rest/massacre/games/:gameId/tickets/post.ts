@@ -1,10 +1,11 @@
-import { ExtendedRequest, logger } from '@lawallet/module';
+import { ExtendedRequest, logger, requiredEnvVar } from '@lawallet/module';
 import { type GameContext } from '@src/index';
 import { Debugger } from 'debug';
 import type { Response } from 'express';
 import { Prisma, PrismaClient, Status } from '@prisma/client';
 import { WALIAS_RE, ZapType, getInvoice, validWalias } from '@src/utils';
 import { createHash } from 'crypto';
+import { republishEvents } from '@nostr/zapReceipt';
 
 const log: Debugger = logger.extend('rest:game:gameId:ticket:post');
 const trace: Debugger = log.extend('trace');
@@ -115,7 +116,10 @@ const GAME_SELECT = Prisma.validator<Prisma.GameSelect>()({
   ticketPrice: true,
   status: true,
   players: {
-    select: { walias: true },
+    select: {
+      walias: true,
+      ticket: { select: { id: true } },
+    },
   },
 });
 type GameInfo = Prisma.GameGetPayload<{
@@ -179,9 +183,25 @@ async function handler<Context extends GameContext>(
     });
     return;
   }
-  if (
-    game.players.some((p) => walias.toLowerCase() === p.walias.toLowerCase())
-  ) {
+  const player = game.players.find(
+    (p) => walias.toLowerCase() === p.walias.toLowerCase(),
+  );
+  if (player) {
+    const ticketEvent = await req.context.writeNDK.fetchEvent({
+      authors: [requiredEnvVar('NOSTR_PUBLIC_KEY')],
+      '#i': [walias],
+      '#l': ['ticket'],
+    });
+    if (ticketEvent) {
+      log('Already published event: %s', ticketEvent.id);
+    } else {
+      const zapReceipt = await (await req.context.writeNDK.fetchEvent({
+        kinds: [9735],
+        '#e': [createHash('sha256').update(player.ticket.id).digest('hex')],
+      }))!.toNostrEvent();
+      log('Republishing event for zapReceipt: %s', zapReceipt.id);
+      await republishEvents(zapReceipt, req.context);
+    }
     res
       .status(409)
       .send({ success: false, message: `${walias} is already playing` });

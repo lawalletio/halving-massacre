@@ -216,7 +216,7 @@ function validateContent(
   return obj as ZapTicketContent | ZapPowerContent;
 }
 
-async function republishEvents(
+export async function republishEvents(
   zapReceiptEvent: NostrEvent,
   ctx: GameContext,
 ): Promise<void> {
