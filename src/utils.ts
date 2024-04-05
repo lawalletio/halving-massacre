@@ -202,8 +202,7 @@ async function signedZapRequest(
     event,
     amount,
     comment,
-    //TODO
-    relays: [requiredEnvVar('NOSTR_RELAYS')],
+    relays: requiredEnvVar('NOSTR_RELAYS').split(','),
   });
   const pubkey = requiredEnvVar('NOSTR_PUBLIC_KEY');
   const signer = new NDKPrivateKeySigner(requiredEnvVar('NOSTR_PRIVATE_KEY'));
