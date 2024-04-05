@@ -9,8 +9,8 @@ overrides:
 
 dependencies:
   '@lawallet/module':
-    specifier: ~0.8.1
-    version: 0.8.1(typescript@5.4.4)
+    specifier: ~0.8.3
+    version: 0.8.3(typescript@5.4.4)
   '@nostr-dev-kit/ndk':
     specifier: ^2.7.1
     version: 2.7.1(typescript@5.4.4)
@@ -1028,8 +1028,8 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
-  /@lawallet/module@0.8.1(typescript@5.4.4):
-    resolution: {integrity: sha512-IJ9kqF9yzus9H3HsDp+QF/k/flVV4PI+iVTC4o1A6S5Pwa6uLXFufsfDHb4ujwQFgmXhgDFg7CME+pkwtr72wg==}
+  /@lawallet/module@0.8.3(typescript@5.4.4):
+    resolution: {integrity: sha512-d+bGwun9KeB2IMKHVMA43ishChCMV6F2nvyWd5oQ6L5ckNbQMBsjiwZgvxpqOFv7t/0yK9xtEuXzZqO+TKcitg==}
     engines: {node: '>=20.11.0'}
     dependencies:
       '@nostr-dev-kit/ndk': 2.7.1(typescript@5.4.4)
@@ -1226,15 +1226,15 @@ packages:
     resolution: {integrity: sha512-osvveYtyzdEVbt3OfwwXFr4P2iVBL5u1Q3q4ONBfDY/UpOuXmOlbgwc1xECEboY8wIays8Yt6onaWMUdUbfl0A==}
     dependencies:
       '@noble/curves': 1.1.0
-      '@noble/hashes': 1.3.1
-      '@scure/base': 1.1.1
+      '@noble/hashes': 1.3.2
+      '@scure/base': 1.1.6
     dev: false
 
   /@scure/bip39@1.2.1:
     resolution: {integrity: sha512-Z3/Fsz1yr904dduJD0NpiyRHhRYHdcnyh73FZWiV+/qhWi83wNJ3NWolYqCEN+ZWsUz2TWwajJggcRE9r1zUYg==}
     dependencies:
-      '@noble/hashes': 1.3.1
-      '@scure/base': 1.1.1
+      '@noble/hashes': 1.3.2
+      '@scure/base': 1.1.6
     dev: false
 
   /@sinclair/typebox@0.27.8:
