@@ -4,7 +4,6 @@ import {
   logger,
   requiredEnvVar,
 } from '@lawallet/module';
-import { NDKFilter, NostrEvent } from 'node_modules/@nostr-dev-kit/ndk/dist';
 import { GameContext } from '../index';
 import {
   GAME_STATE_SELECT,
@@ -23,6 +22,7 @@ import {
   UnsignedEvent,
 } from 'nostr-tools';
 import { Debugger } from 'debug';
+import { NDKEvent, NDKFilter, NostrEvent } from '@nostr-dev-kit/ndk';
 
 const log: Debugger = logger.extend('nostr:zapReceipt');
 const warn: Debugger = log.extend('warn');
@@ -58,7 +58,6 @@ async function addPower(
     return;
   }
   const maxZap = amount < roundPlayer.maxZap ? roundPlayer.maxZap : amount;
-  const zapReceiptId = zapReceiptEvent.id!;
   const game = await ctx.prisma.game.update({
     data: {
       currentPool: { increment: amount },
@@ -70,7 +69,12 @@ async function addPower(
                 maxZap,
                 zapped: { increment: amount },
                 zapCount: { increment: 1 },
-                zapReceipts: { push: zapReceiptId },
+                zapReceipts: {
+                  create: {
+                    id: zapReceiptEvent.id!,
+                    event: JSON.stringify(zapReceiptEvent),
+                  },
+                },
                 player: {
                   update: {
                     data: {
@@ -151,7 +155,12 @@ async function consumeTicket(
         update: {
           roundPlayers: {
             create: {
-              zapReceipts: [zapReceiptId],
+              zapReceipts: {
+                create: {
+                  id: zapReceiptEvent.id!,
+                  event: JSON.stringify(zapReceiptEvent),
+                },
+              },
               player: {
                 create: {
                   gameId,
@@ -182,7 +191,7 @@ async function consumeTicket(
       gameStateEvent(game, getEventHash(ticketE as UnsignedEvent)),
     ),
   ]).then(async (results) => {
-    log('Publis results: %O', results);
+    log('Publish results: %O', results);
     if ('rejected' === results[0].status) {
       await republishEvents(zapReceiptEvent, ctx);
     }
@@ -220,7 +229,7 @@ export async function republishEvents(
   zapReceiptEvent: NostrEvent,
   ctx: GameContext,
 ): Promise<void> {
-  log('Did not published event, publishing...');
+  log('Did not publish event, publishing...');
   const zapRequest = JSON.parse(
     getTagValue(zapReceiptEvent, 'description')!,
   ) as NostrEvent;
@@ -262,11 +271,12 @@ export async function republishEvents(
 }
 
 function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
-  return async (event: NostrEvent): Promise<void> => {
-    const exists = await ctx.prisma.roundPlayer.findFirst({
-      where: { zapReceipts: { has: event.id! } },
+  return async (ndkEvent: NostrEvent): Promise<void> => {
+    const event = await (ndkEvent as NDKEvent).toNostrEvent();
+    const existing = await ctx.prisma.zapReceipt.findUnique({
+      where: { id: event.id! },
     });
-    if (exists) {
+    if (existing) {
       log(
         `Already handled zap receipt ${event.id}, checking if event as published`,
       );

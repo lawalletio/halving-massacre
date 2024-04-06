@@ -80,13 +80,13 @@ model RoundPlayer {
   roundId  String @map("round_id") @db.Uuid
   playerId String @map("player_id") @db.Uuid
 
-  maxZap      Int      @default(0) @map("max_zap")
-  zapped      Int      @default(0)
-  zapCount    Int      @default(0) @map("zap_count")
-  zapReceipts String[] @map("zap_requests")
+  maxZap   Int @default(0) @map("max_zap")
+  zapped   Int @default(0)
+  zapCount Int @default(0) @map("zap_count")
 
-  player Player @relation(fields: [playerId], references: [id])
-  round  Round  @relation(fields: [roundId], references: [id])
+  player      Player       @relation(fields: [playerId], references: [id])
+  round       Round        @relation(fields: [roundId], references: [id])
+  zapReceipts ZapReceipt[] @relation
 
   @@id([playerId, roundId])
   @@map("round_player")
@@ -103,4 +103,14 @@ model Ticket {
 
   @@unique([gameId, walias])
   @@map("ticket")
+}
+
+model ZapReceipt {
+  id String @id
+
+  event    String
+  roundId  String @db.Uuid
+  playerId String @db.Uuid
+
+  roundPlayer RoundPlayer @relation(fields: [roundId, playerId], references: [roundId, playerId])
 }
