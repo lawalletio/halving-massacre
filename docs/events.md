@@ -30,6 +30,36 @@
 }
 ```
 
+#### Profile
+
+```json
+{
+  "kind": 31111,
+  "tags": [
+    ["e", "<id>", "wss://relay.lawallet.ar", "profile"],
+    ["e", "<id>", "wss://relay.lawallet.ar", "<last_modified>"],
+    ["d", "profile:<setup_id>:<walias>"],
+    ["L", "halving-massacre"],
+    ["l", "profile", "halving-massacre"],
+    ["block", "current_block"]
+  ],
+  "content": {
+    "walias": "<walias>",
+    "power": power_amount,
+    "deathRound": number | null,
+    "rounds": [
+      {
+        "number": round_number,
+        "isCurrent": boolean,
+        "zapped": zapped_amount,
+        "zapCount": zap_times
+      }
+    ]
+ },
+ ...(id, pubkey, sig, created_at)
+}
+```
+
 ### Regular
 #### Setup
 
