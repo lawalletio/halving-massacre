@@ -115,6 +115,11 @@ async function addPower(
     log('Publish results: %O', results);
     if ('rejected' === results[0].status) {
       await republishEvents(zapReceiptEvent, ctx);
+    } else {
+      await ctx.prisma.zapReceipt.update({
+        data: { isAnswered: true },
+        where: { id: zapReceiptEvent.id! },
+      });
     }
   });
 }
@@ -159,6 +164,7 @@ async function consumeTicket(
                 create: {
                   id: zapReceiptEvent.id!,
                   event: JSON.stringify(zapReceiptEvent),
+                  ticket: { connect: { id: ticketId } },
                 },
               },
               player: {
@@ -194,6 +200,11 @@ async function consumeTicket(
     log('Publish results: %O', results);
     if ('rejected' === results[0].status) {
       await republishEvents(zapReceiptEvent, ctx);
+    } else {
+      await ctx.prisma.zapReceipt.update({
+        data: { isAnswered: true },
+        where: { id: zapReceiptEvent.id! },
+      });
     }
   });
 }
@@ -247,8 +258,13 @@ export async function republishEvents(
         where: { id: content.ticketId },
       });
       const ticketE = ticketEvent(game!, ticket!.walias, zapReceiptEvent.id!);
-      await ctx.outbox.publish(ticketE);
-      debug('Published ticket event correctly');
+      await ctx.outbox.publish(ticketE).then(async () => {
+        debug('Published ticket event correctly');
+        await ctx.prisma.zapReceipt.update({
+          data: { isAnswered: true },
+          where: { id: zapReceiptEvent.id! },
+        });
+      });
       break;
     }
     case ZapType.POWER.valueOf(): {
@@ -259,8 +275,13 @@ export async function republishEvents(
         content.walias,
         zapReceiptEvent.id!,
       );
-      await ctx.outbox.publish(powerReceipt);
-      debug('Published power event correctly');
+      await ctx.outbox.publish(powerReceipt).then(async () => {
+        debug('Published power event correctly');
+        await ctx.prisma.zapReceipt.update({
+          data: { isAnswered: true },
+          where: { id: zapReceiptEvent.id! },
+        });
+      });
       break;
     }
     default:
@@ -277,17 +298,12 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
       where: { id: event.id! },
     });
     if (existing) {
-      log(
-        `Already handled zap receipt ${event.id}, checking if event as published`,
-      );
-      const pubEvent = await ctx.writeNDK.fetchEvent({
-        authors: [requiredEnvVar('NOSTR_PUBLIC_KEY')],
-        '#e': [event.id!],
-        '#l': ['ticket', 'power-receipt'],
-      });
-      if (pubEvent) {
-        log('Already published event: %s', pubEvent.id);
+      if (existing.isAnswered) {
+        log('Already handled event: %s', existing.id);
       } else {
+        warn(
+          `Already handled zap receipt ${event.id} but answer was not published, publishing...`,
+        );
         await republishEvents(event, ctx);
       }
       return;

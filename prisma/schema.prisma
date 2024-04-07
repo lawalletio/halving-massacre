@@ -95,11 +95,13 @@ model RoundPlayer {
 model Ticket {
   id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
-  gameId String @map("game_id")
-  walias String
+  gameId       String  @map("game_id")
+  walias       String
+  zapReceiptId String? @unique
 
-  game   Game    @relation(fields: [gameId], references: [id])
-  player Player? @relation
+  game       Game        @relation(fields: [gameId], references: [id])
+  player     Player?     @relation
+  zapReceipt ZapReceipt? @relation(fields: [zapReceiptId], references: [id])
 
   @@unique([gameId, walias])
   @@map("ticket")
@@ -108,9 +110,11 @@ model Ticket {
 model ZapReceipt {
   id String @id
 
-  event    String
-  roundId  String @db.Uuid
-  playerId String @db.Uuid
+  event      String
+  roundId    String  @db.Uuid
+  playerId   String  @db.Uuid
+  isAnswered Boolean @default(false)
 
   roundPlayer RoundPlayer @relation(fields: [roundId, playerId], references: [roundId, playerId])
+  ticket      Ticket?     @relation
 }
