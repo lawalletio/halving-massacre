@@ -6,7 +6,7 @@ import {
 } from '@lawallet/module';
 import NDK, { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
 import { PrismaClient } from '@prisma/client';
-import { WebSocket } from 'ws';
+import { startMempoolSpaceConnection } from '@src/mempoolspace';
 
 export type GameContext = {
   prisma: PrismaClient;
@@ -30,9 +30,10 @@ const readNDK = new NDK({
     ),
 });
 
+const prisma = new PrismaClient();
 const context: GameContext = {
   outbox: new DirectOutbox(writeNDK),
-  prisma: new PrismaClient(),
+  prisma,
   writeNDK,
 };
 
@@ -45,30 +46,5 @@ const module = Module.build<GameContext>({
   readNDK,
 });
 
-const ws = new WebSocket(requiredEnvVar('MEMPOOL_WS_URL'));
-ws.on('open', () => {
-  ws.send(JSON.stringify({ action: 'want', data: ['blocks'] }));
-});
-
-ws.on('message', (data: Buffer) => {
-  const message: object = JSON.parse(data.toString('utf8'));
-  if ('blocks' in message) {
-  }
-  if ('block' in message) {
-  }
-});
-
-const ws = new WebSocket(requiredEnvVar('MEMPOOL_WS_URL'));
-ws.on('open', () => {
-  ws.send(JSON.stringify({ action: 'want', data: ['blocks'] }));
-});
-
-ws.on('message', (data: Buffer) => {
-  const message: object = JSON.parse(data.toString('utf8'));
-  if ('blocks' in message) {
-  }
-  if ('block' in message) {
-  }
-});
-
+startMempoolSpaceConnection(prisma);
 void module.start();
