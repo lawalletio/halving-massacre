@@ -249,25 +249,25 @@ export async function getInvoice(
 type Link<T> = {
   value: T;
   next: Link<T> | undefined;
-}
+};
 export class Queue<T> {
-    #head: Link<T> | undefined;
-    #tail: Link<T> | undefined;
+  #head: Link<T> | undefined;
+  #tail: Link<T> | undefined;
 
-    public enqueue(value: T): void {
-        const link = {value, next: undefined};
-        this.#tail = this.#head ? this.#tail!.next = link : this.#head = link;
-    }
+  public enqueue(value: T): void {
+    const link = { value, next: undefined };
+    this.#tail = this.#head ? (this.#tail!.next = link) : (this.#head = link);
+  }
 
-    public dequeue(): T | undefined{
-        if (this.#head) {
-            const value = this.#head.value;
-            this.#head = this.#head.next;
-            return value;
-        }
-        return undefined;
+  public dequeue(): T | undefined {
+    if (this.#head) {
+      const value = this.#head.value;
+      this.#head = this.#head.next;
+      return value;
     }
-    public peek(): T | undefined {
-      return this.#head?.value;
-    }
+    return undefined;
+  }
+  public peek(): T | undefined {
+    return this.#head?.value;
+  }
 }

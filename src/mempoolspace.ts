@@ -1,7 +1,9 @@
-import { requiredEnvVar } from '@lawallet/module';
-import { Prisma, PrismaClient, PrismaPromise, Status } from '@prisma/client';
+import { logger, requiredEnvVar } from '@lawallet/module';
+import { PrismaClient, Status } from '@prisma/client';
+import { Debugger } from 'debug';
 import WebSocket from 'ws';
-import { Queue } from '@src/utils';
+
+const log: Debugger = logger.extend('mempoolspace');
 
 export type MsBlock = {
   id: string;
@@ -28,7 +30,18 @@ export type MsBlock = {
   };
 };
 
-const GAME_UPDATE_QUEUE = new Queue<PrismaPromise<Prisma.BatchPayload>>();
+/*
+const GAME_UPDATE_QUEUE = new Queue<() => Promise<void>>();
+
+setInterval(() => {
+  const p = GAME_UPDATE_QUEUE.dequeue();
+  if (p) {
+    void (async () => {
+      await p();
+    })();
+  }
+}, 100);
+*/
 
 export function startMempoolSpaceConnection(prisma: PrismaClient) {
   const ws = new WebSocket(requiredEnvVar('MEMPOOL_WS_URL'));
@@ -38,8 +51,7 @@ export function startMempoolSpaceConnection(prisma: PrismaClient) {
       ws.ping();
     }, 60000);
   });
-  ws.on;
-  ws.on('message', async (data: Buffer) => {
+  ws.on('message', (data: Buffer) => {
     const message: object = JSON.parse(data.toString('utf8')) as object;
     let currentBlock: MsBlock | undefined = undefined;
     if ('blocks' in message) {
@@ -51,10 +63,13 @@ export function startMempoolSpaceConnection(prisma: PrismaClient) {
       currentBlock = message.block as MsBlock;
     }
     if (currentBlock) {
-      GAME_UPDATE_QUEUE.enqueue(prisma.game.updateMany({
-        data: { currentBlock: currentBlock.height },
-        where: { status: { not: Status.FINAL } },
-      }));
+      void (async () => {
+        log('New block found: %O', currentBlock);
+        await prisma.game.updateMany({
+          data: { currentBlock: currentBlock.height },
+          where: { status: { not: Status.FINAL } },
+        });
+      })();
     }
   });
 }
