@@ -68,17 +68,18 @@ export function gameStateEvent(
   game: GameStateData,
   lastModifier: string,
 ): NostrEvent {
-  const { currentRound, ...rest } = game;
+  const { currentRound, currentPool, ...rest } = game;
   const playerEntries = currentRound.roundPlayers.map((rp) => [
     rp.player.walias,
-    rp.player.power,
+    Number(rp.player.power),
   ]);
   const top100Players = Object.fromEntries(playerEntries) as Record<
     string,
-    string
+    number
   >;
   const content = JSON.stringify({
     ...rest,
+    currentPool: Number(currentPool),
     top100Players,
     playerCount: game._count.players,
   });

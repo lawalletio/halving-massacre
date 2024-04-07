@@ -18,14 +18,14 @@ enum Status {
 model Game {
   id String @id
 
-  finalBlock  Int  @map("final_block")
-  firstBlock  Int? @map("first_block")
-  initialPool Int  @map("initial_pool")
-  minBet      Int  @map("min_bet")
-  ticketPrice Int  @map("ticket_price")
+  finalBlock  Int    @map("final_block")
+  firstBlock  Int?   @map("first_block")
+  initialPool BigInt @map("initial_pool")
+  minBet      BigInt @map("min_bet")
+  ticketPrice BigInt @map("ticket_price")
 
   currentBlock       Int    @map("current_block")
-  currentPool        Int    @map("current_pool")
+  currentPool        BigInt @map("current_pool")
   currentRoundNumber Int    @map("current_round_number")
   freezeDuration     Int?   @map("freeze_duration")
   nextFreeze         Int?   @map("next_freeze")
@@ -61,10 +61,10 @@ model Player {
   walias String
 
   deathRoundId String? @map("death_round_id") @db.Uuid
-  maxZap       Int     @default(0) @map("max_zap")
-  power        Int     @default(0)
+  maxZap       BigInt  @default(0) @map("max_zap")
+  power        BigInt  @default(0)
   ticketId     String  @unique @map("ticket_id") @db.Uuid
-  zapped       Int     @default(0) @map("total_zapped")
+  zapped       BigInt  @default(0) @map("total_zapped")
   zapCount     Int     @default(0) @map("zap_count")
 
   deathRound   Round?        @relation("deadPlayers", fields: [deathRoundId], references: [id])
@@ -80,9 +80,9 @@ model RoundPlayer {
   roundId  String @map("round_id") @db.Uuid
   playerId String @map("player_id") @db.Uuid
 
-  maxZap   Int @default(0) @map("max_zap")
-  zapped   Int @default(0)
-  zapCount Int @default(0) @map("zap_count")
+  maxZap   BigInt @default(0) @map("max_zap")
+  zapped   BigInt @default(0)
+  zapCount Int    @default(0) @map("zap_count")
 
   player      Player       @relation(fields: [playerId], references: [id])
   round       Round        @relation(fields: [roundId], references: [id])
