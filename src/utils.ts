@@ -40,6 +40,7 @@ export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
   status: true,
   roundLength: true,
   freezeDuration: true,
+  currentPool: true,
   currentRound: {
     select: {
       roundPlayers: {

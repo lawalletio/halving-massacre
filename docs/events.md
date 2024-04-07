@@ -15,6 +15,7 @@
   ],
   "content": {
     "currentBlock": block_number,
+    "currentPool": total_prize,
     "top100Players": {
       "walias": power_amount,
       ...
