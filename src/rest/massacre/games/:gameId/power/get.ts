@@ -1,9 +1,13 @@
-import { ExtendedRequest } from '@lawallet/module';
+import { ExtendedRequest, logger } from '@lawallet/module';
 import { ZapType, getInvoice, validWalias } from '@src/utils';
 import type { Response } from 'express';
 import { GameContext } from '@src/index';
 import { Prisma, PrismaClient, Status } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import { Debugger } from 'debug';
+
+const log: Debugger = logger.extend('rest:game:gameId:power:get');
+const warn: Debugger = log.extend('warn');
 
 const VALID_STATUSES: Status[] = [Status.SETUP, Status.INITIAL, Status.NORMAL];
 
@@ -69,10 +73,14 @@ async function handler<Context extends GameContext>(
     });
     return;
   }
-  let amount: number;
+  const amount = Number(qAmount);
+  if (!Number.isSafeInteger(amount) || amount <= 0 ) {
+    const message = `Amount must be a positive integer, received: ${amount}`;
+    res.status(422).send({ success: false, message });
+    return;
+  }
   let walias: string;
   try {
-    amount = Number(qAmount);
     walias = validWalias(req.query['walias']);
   } catch (err: unknown) {
     res.status(422).send({ success: false, message: (err as Error).message });
@@ -118,6 +126,7 @@ async function handler<Context extends GameContext>(
   try {
     lud06Res = await getInvoice(eTag, amount, JSON.stringify(content));
   } catch (err: unknown) {
+    warn('Error getting invoice: %O', err);
     const message = (err as Error).message;
     res.status(500).json({ success: false, message }).send();
     return;
