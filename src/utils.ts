@@ -30,6 +30,7 @@ export type ZapPowerContent = {
   type: ZapType.POWER;
   gameId: string;
   walias: string;
+  message: string;
 };
 
 export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
@@ -109,11 +110,13 @@ export function gameStateEvent(
 export function powerReceiptEvent(
   game: Pick<GameStateData, 'id' | 'currentBlock'>,
   amount: number,
-  walias: string,
+  zapReceiptContent: Pick<ZapPowerContent, 'message' | 'walias'>,
   zapReceiptId: string,
 ): NostrEvent {
+  const { message, walias } = zapReceiptContent;
   const content = JSON.stringify({
     amount,
+    message,
     player: walias,
   });
   return {
@@ -223,9 +226,10 @@ async function signedZapRequest(
 export async function getInvoice(
   eventId: string,
   amount: number,
-  comment: string,
+  content: string,
+  comment: string = '',
 ): Promise<Lud06Response> {
-  const zr = await signedZapRequest(Number(amount), eventId, comment);
+  const zr = await signedZapRequest(Number(amount), eventId, content);
   let res;
   try {
     res = await fetch(

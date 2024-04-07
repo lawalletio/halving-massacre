@@ -118,7 +118,8 @@
   ],
   "content": {
       "amount": millisats,
-      "player": "walias"
+      "player": "walias",
+      "message": "message"
   }
  ...(id, pubkey, sig, created_at)
 ```

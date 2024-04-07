@@ -73,8 +73,13 @@ async function handler<Context extends GameContext>(
     });
     return;
   }
+  const message = req.query['message']?.toString() ?? '';
+  if (255 < message.length) {
+    res.status(422).send({ success: false, message: 'Message too long' });
+    return;
+  }
   const amount = Number(qAmount);
-  if (!Number.isSafeInteger(amount) || amount <= 0 ) {
+  if (!Number.isSafeInteger(amount) || amount <= 0) {
     const message = `Amount must be a positive integer, received: ${amount}`;
     res.status(422).send({ success: false, message });
     return;
@@ -121,10 +126,11 @@ async function handler<Context extends GameContext>(
     type: ZapType.POWER,
     gameId,
     walias,
+    message,
   };
   let lud06Res;
   try {
-    lud06Res = await getInvoice(eTag, amount, JSON.stringify(content));
+    lud06Res = await getInvoice(eTag, amount, JSON.stringify(content), message);
   } catch (err: unknown) {
     warn('Error getting invoice: %O', err);
     const message = (err as Error).message;

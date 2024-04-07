@@ -103,7 +103,7 @@ async function addPower(
   const powerReceipt = powerReceiptEvent(
     game,
     amount,
-    walias,
+    content,
     zapReceiptEvent.id!,
   );
   await Promise.allSettled([
@@ -187,7 +187,7 @@ async function consumeTicket(
   const powerReceipt = powerReceiptEvent(
     game,
     POWER_GIFT,
-    ticket.walias,
+    { message: 'Your first power!', walias: ticket.walias },
     zapReceiptId,
   );
   await Promise.allSettled([
@@ -272,7 +272,7 @@ export async function republishEvents(
       const powerReceipt = powerReceiptEvent(
         game!,
         amount,
-        content.walias,
+        content,
         zapReceiptEvent.id!,
       );
       await ctx.outbox.publish(powerReceipt).then(async () => {
