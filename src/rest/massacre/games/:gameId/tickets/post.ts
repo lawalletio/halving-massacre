@@ -3,7 +3,7 @@ import { type GameContext } from '@src/index';
 import { Debugger } from 'debug';
 import type { Response } from 'express';
 import { Prisma, PrismaClient, Status } from '@prisma/client';
-import { WALIAS_RE, ZapType, getInvoice, validWalias } from '@src/utils';
+import { ZapType, getInvoice, validWalias } from '@src/utils';
 import { createHash } from 'crypto';
 import { republishEvents } from '@nostr/zapReceipt';
 import { NostrEvent } from '@nostr-dev-kit/ndk';
@@ -11,7 +11,6 @@ import { NostrEvent } from '@nostr-dev-kit/ndk';
 const log: Debugger = logger.extend('rest:game:gameId:ticket:post');
 const trace: Debugger = log.extend('trace');
 const debug: Debugger = log.extend('debug');
-const warn: Debugger = log.extend('warn');
 
 const VALID_STATUSES: Status[] = [Status.SETUP, Status.INITIAL];
 
@@ -43,49 +42,6 @@ function validateBody(data: unknown): RequestBody {
     debug((err as Error).message);
     throw err;
   }
-}
-
-/**
- * Checks if the domain returns a valid lud06 response for the user
- *
- * @param address that we assume was previously validated as a valid address
- * @returns true if the domain returned a valid walias response false otherwise
- */
-async function isServerActive(address: string): Promise<boolean> {
-  const { username, domain } = address.match(WALIAS_RE)!.groups as {
-    username: string;
-    domain: string;
-  };
-  let res;
-  try {
-    res = await fetch(`https://${domain}/.well-known/lnurlp/${username}`);
-  } catch (err: unknown) {
-    warn('Error fetching %s: %O', address, err);
-    return false;
-  }
-  if (res.status < 200 || 300 <= res.status) {
-    log('walias request returned non success status %O', res.status);
-    return false;
-  }
-  const body = await res.json();
-  if ('object' !== typeof body || null === body) {
-    log('lud16 request invalid body %O', body);
-    return false;
-  }
-  if (
-    'status' in body &&
-    'string' === typeof body.status &&
-    'ERROR' === body.status.toUpperCase()
-  ) {
-    log('lud16 request returned status error: %O', body);
-    return false;
-  }
-  return (
-    'tag' in body &&
-    'payRequest' === body.tag &&
-    'callback' in body &&
-    'string' === typeof body.callback
-  );
 }
 
 /**
@@ -200,11 +156,6 @@ async function handler<Context extends GameContext>(
     res
       .status(409)
       .send({ success: false, message: `${walias} is already playing` });
-    return;
-  }
-  if (!(await isServerActive(walias))) {
-    const message = `Server for ${walias} does not handle lud16 correctly`;
-    res.status(400).json({ success: false, message }).send();
     return;
   }
   const ticketId = await generateTicket(req.context.prisma, game.id, walias);
