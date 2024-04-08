@@ -1,5 +1,5 @@
 import { Kind, logger, nowInSeconds, requiredEnvVar } from '@lawallet/module';
-import { Prisma } from '@prisma/client';
+import { Player, Prisma } from '@prisma/client';
 import { Debugger } from 'debug';
 import NDK, {
   NDKEvent,
@@ -47,7 +47,6 @@ export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
       roundPlayers: {
         select: { player: { select: { walias: true, power: true } } },
         orderBy: { player: { power: Prisma.SortOrder.desc } },
-        take: 100,
       },
     },
   },
@@ -69,14 +68,10 @@ export function gameStateEvent(
   lastModifier: string,
 ): NostrEvent {
   const { currentRound, currentPool, ...rest } = game;
-  const playerEntries = currentRound.roundPlayers.map((rp) => [
-    rp.player.walias,
-    Number(rp.player.power),
-  ]);
-  const top100Players = Object.fromEntries(playerEntries) as Record<
-    string,
-    number
-  >;
+  const top100Players = powerByPlayer(
+    currentRound.roundPlayers.map((rp) => rp.player),
+    100,
+  );
   const content = JSON.stringify({
     ...rest,
     currentPool: Number(currentPool),
@@ -97,6 +92,24 @@ export function gameStateEvent(
     ],
     created_at: nowInSeconds(),
   };
+}
+
+/**
+ * Build a dictionaty of players with their powers
+ *
+ * @param players list of player with walias and power, we assume it to be
+ * sorted
+ * @param topN optional param to indicate how many results we want to provide
+ * @return a dictionary where the keys are the waliases and the value is power
+ */
+export function powerByPlayer(
+  players: Pick<Player, 'walias' | 'power'>[],
+  topN?: number,
+): { [key: string]: number } {
+  if (topN && topN < players.length) {
+    players.length = topN;
+  }
+  return Object.fromEntries(players.map((p) => [p.walias, Number(p.power)]));
 }
 
 /**
