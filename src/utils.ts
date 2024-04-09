@@ -243,6 +243,8 @@ function lud06Callback(
   comment: string,
   zapRequest: string,
 ): string {
+  comment = encodeURIComponent(comment);
+  zapRequest = encodeURIComponent(zapRequest);
   return `${requiredEnvVar('LW_API_ENDPOINT')}/lnurlp/${pubKey}/callback?amount=${amount.toString()}&comment=${comment}&nostr=${zapRequest}`;
 }
 
