@@ -7,6 +7,7 @@ import NDK, {
   NostrEvent,
 } from '@nostr-dev-kit/ndk';
 import { makeZapRequest } from 'nostr-tools/nip57';
+import { PowerData } from '@services/power';
 
 const log: Debugger = logger.extend('utils');
 const error: Debugger = log.extend('error');
@@ -123,7 +124,7 @@ export function powerByPlayer(
 export function powerReceiptEvent(
   game: Pick<GameStateData, 'id' | 'currentBlock'>,
   amount: number,
-  zapReceiptContent: Pick<ZapPowerContent, 'message' | 'walias'>,
+  zapReceiptContent: Pick<PowerData, 'message' | 'walias'>,
   zapReceiptId: string,
 ): NostrEvent {
   const { message, walias } = zapReceiptContent;

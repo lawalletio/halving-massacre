@@ -23,6 +23,7 @@ import {
 } from 'nostr-tools';
 import { Debugger } from 'debug';
 import { NDKEvent, NDKFilter, NostrEvent } from '@nostr-dev-kit/ndk';
+import { PowerType, addLightningPower } from '@services/power';
 
 const log: Debugger = logger.extend('nostr:zapReceipt');
 const warn: Debugger = log.extend('warn');
@@ -38,91 +39,6 @@ const filter: NDKFilter = {
 };
 
 const POWER_GIFT = 21000;
-
-async function addPower(
-  content: ZapPowerContent,
-  amount: number,
-  zapReceiptEvent: NostrEvent,
-  ctx: GameContext,
-): Promise<void> {
-  const { gameId, walias } = content;
-  const roundPlayer = await ctx.prisma.roundPlayer.findFirst({
-    where: {
-      player: { walias },
-      round: { gameId },
-    },
-    orderBy: { round: { number: 'desc' } },
-  });
-  if (!roundPlayer) {
-    warn('%s is not a player alive on %$s', walias, gameId);
-    return;
-  }
-  const maxZap = amount < roundPlayer.maxZap ? roundPlayer.maxZap : amount;
-  const game = await ctx.prisma.game.update({
-    data: {
-      currentPool: { increment: amount },
-      currentRound: {
-        update: {
-          roundPlayers: {
-            update: {
-              data: {
-                maxZap,
-                zapped: { increment: amount },
-                zapCount: { increment: 1 },
-                zapReceipts: {
-                  create: {
-                    id: zapReceiptEvent.id!,
-                    event: JSON.stringify(zapReceiptEvent),
-                  },
-                },
-                player: {
-                  update: {
-                    data: {
-                      maxZap,
-                      zapped: { increment: amount },
-                      power: { increment: amount },
-                      zapCount: { increment: 1 },
-                    },
-                  },
-                },
-              },
-              where: {
-                playerId_roundId: {
-                  playerId: roundPlayer.playerId,
-                  roundId: roundPlayer.roundId,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    select: GAME_STATE_SELECT,
-    where: { id: gameId },
-  });
-  const powerReceipt = powerReceiptEvent(
-    game,
-    amount,
-    content,
-    zapReceiptEvent.id!,
-  );
-  await Promise.allSettled([
-    ctx.outbox.publish(powerReceipt),
-    ctx.outbox.publish(
-      gameStateEvent(game, getEventHash(powerReceipt as UnsignedEvent)),
-    ),
-  ]).then(async (results) => {
-    log('Publish results: %O', results);
-    if ('rejected' === results[0].status) {
-      await republishEvents(zapReceiptEvent, ctx);
-    } else {
-      await ctx.prisma.zapReceipt.update({
-        data: { isAnswered: true },
-        where: { id: zapReceiptEvent.id! },
-      });
-    }
-  });
-}
 
 async function consumeTicket(
   content: ZapTicketContent,
@@ -349,7 +265,15 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
         break;
       case ZapType.POWER.valueOf():
         debug('Adding power: %O', content);
-        await addPower(content as ZapPowerContent, amount, event, ctx);
+        await addLightningPower(
+          {
+            ...(content as ZapPowerContent),
+            type: PowerType.LIGHTNING,
+            amount,
+          },
+          event,
+          ctx,
+        );
         debug('Published power events correctly');
         break;
       default:

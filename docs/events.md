@@ -119,7 +119,8 @@
   "content": {
       "amount": millisats,
       "player": "walias",
-      "message": "message"
+      "message": "message",
+      "type": "LIGHTNING" | "ONCHAIN" | "MASSACRE"
   }
  ...(id, pubkey, sig, created_at)
 ```
