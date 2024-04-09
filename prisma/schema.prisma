@@ -32,6 +32,7 @@ model Game {
   nextMassacre       Int?   @map("next_massacre")
   roundLength        Int?   @map("round_length")
   status             Status
+  poolPubKey         String @map("pool_pub_key")
 
   currentRound Round    @relation(fields: [id, currentRoundNumber], references: [gameId, number])
   players      Player[] @relation

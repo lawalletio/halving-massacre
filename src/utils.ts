@@ -13,7 +13,6 @@ const error: Debugger = log.extend('error');
 
 export const WALIAS_RE =
   /(?<username>^[A-Z0-9._-]{1,64})@(?<domain>(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63})$/i;
-const LUD06_CALLBACK = `${requiredEnvVar('LW_API_ENDPOINT')}/lnurlp/${requiredEnvVar('NOSTR_PUBLIC_KEY')}/callback`;
 
 export enum ZapType {
   TICKET = 'TICKET',
@@ -211,12 +210,13 @@ export function validWalias(input: unknown): string {
  * @return the signed zap request event
  */
 async function signedZapRequest(
+  profile: string,
   amount: number,
   event: string,
   comment: string,
 ): Promise<NostrEvent> {
   const zr = makeZapRequest({
-    profile: requiredEnvVar('NOSTR_PUBLIC_KEY'),
+    profile,
     event,
     amount,
     comment,
@@ -230,6 +230,23 @@ async function signedZapRequest(
 }
 
 /**
+ * Build lud06 callback
+ *
+ * @param pubKey lawallet user where the funds will be accredited
+ * @param amount to create the invoice for
+ * @param comment to include in the lud06
+ * @param zapRequest stringify zapRequest
+ */
+function lud06Callback(
+  pubKey: string,
+  amount: number,
+  comment: string,
+  zapRequest: string,
+): string {
+  return `${requiredEnvVar('LW_API_ENDPOINT')}/lnurlp/${pubKey}/callback?amount=${amount.toString()}&comment=${comment}&nostr=${zapRequest}`;
+}
+
+/**
  * Generates an invoice for our own account and return the response
  *
  * @param amount to generate the invoice for
@@ -239,15 +256,21 @@ async function signedZapRequest(
  */
 export async function getInvoice(
   eventId: string,
+  poolPubKey: string,
   amount: number,
   content: string,
   comment: string = '',
 ): Promise<Lud06Response> {
-  const zr = await signedZapRequest(Number(amount), eventId, content);
+  const zr = await signedZapRequest(
+    poolPubKey,
+    Number(amount),
+    eventId,
+    content,
+  );
   let res;
   try {
     res = await fetch(
-      `${LUD06_CALLBACK}?amount=${amount.toString()}&comment=${comment}&nostr=${JSON.stringify(zr)}`,
+      lud06Callback(poolPubKey, amount, comment, JSON.stringify(zr)),
     );
   } catch (err: unknown) {
     error('Error generating invoice: %O', err);

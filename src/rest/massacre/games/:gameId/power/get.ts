@@ -15,6 +15,7 @@ const GAME_SELECT = Prisma.validator<Prisma.GameSelect>()({
   minBet: true,
   nextMassacre: true,
   status: true,
+  poolPubKey: true,
   currentRound: {
     select: {
       roundPlayers: { select: { player: { select: { walias: true } } } },
@@ -130,7 +131,13 @@ async function handler<Context extends GameContext>(
   };
   let lud06Res;
   try {
-    lud06Res = await getInvoice(eTag, amount, JSON.stringify(content), message);
+    lud06Res = await getInvoice(
+      eTag,
+      game.poolPubKey,
+      amount,
+      JSON.stringify(content),
+      message,
+    );
   } catch (err: unknown) {
     warn('Error getting invoice: %O', err);
     const message = (err as Error).message;

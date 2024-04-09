@@ -32,7 +32,7 @@ const debug: Debugger = log.extend('debug');
 const filter: NDKFilter = {
   kinds: [9735],
   authors: [requiredEnvVar('BTC_GATEWAY_PUBLIC_KEY')],
-  '#p': [requiredEnvVar('NOSTR_PUBLIC_KEY')],
+  '#p': requiredEnvVar('POOLS_PUBLIC_KEYS').split(','),
   since: Math.floor(Date.now() / 1000) - 86000,
   until: Math.floor(Date.now() / 1000) + 86000,
 };
@@ -326,6 +326,18 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
     const content = validateContent(zapRequest.content);
     if (!content) {
       warn('Invalid zap request content: %O', zapRequest.content);
+      return;
+    }
+    const poolPubKey = getTagValue(event, 'p') ?? '';
+    const gameExists = await ctx.prisma.game.findUnique({
+      where: { id: content.gameId, poolPubKey },
+    });
+    if (!gameExists) {
+      warn(
+        'No game with id %s for poolPubKey: %s ',
+        content.gameId,
+        poolPubKey,
+      );
       return;
     }
     const amount = Number(getTagValue(zapRequest, 'amount'));
