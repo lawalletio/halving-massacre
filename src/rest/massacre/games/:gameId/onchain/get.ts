@@ -110,7 +110,7 @@ async function handler<Context extends GameContext>(
     lud06Res = await getInvoice(
       eTag,
       game.poolPubKey,
-      parseInt(requiredEnvVar('ADDRESS_PRICE_MILLISATS')),
+      parseInt(requiredEnvVar('ONCHAIN_ADDRESS_PRICE_MILLISATS')),
       JSON.stringify(content),
     );
   } catch (err: unknown) {
