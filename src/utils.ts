@@ -17,6 +17,7 @@ export const WALIAS_RE =
 export enum ZapType {
   TICKET = 'TICKET',
   POWER = 'POWER',
+  ONCHAIN_ADDRESS = 'ONCHAIN_ADDRESS',
 }
 
 export type ZapTicketContent = {
