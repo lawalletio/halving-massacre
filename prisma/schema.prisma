@@ -61,12 +61,13 @@ model Player {
   gameId String @map("game_id")
   walias String
 
-  deathRoundId String? @map("death_round_id") @db.Uuid
-  maxZap       BigInt  @default(0) @map("max_zap")
-  power        BigInt  @default(0)
-  ticketId     String  @unique @map("ticket_id") @db.Uuid
-  zapped       BigInt  @default(0) @map("total_zapped")
-  zapCount     Int     @default(0) @map("zap_count")
+  deathRoundId   String? @map("death_round_id") @db.Uuid
+  maxZap         BigInt  @default(0) @map("max_zap")
+  power          BigInt  @default(0)
+  ticketId       String  @unique @map("ticket_id") @db.Uuid
+  zapped         BigInt  @default(0) @map("total_zapped")
+  zapCount       Int     @default(0) @map("zap_count")
+  onchainAddress String? @map("onchain_address")
 
   deathRound   Round?        @relation("deadPlayers", fields: [deathRoundId], references: [id])
   game         Game          @relation(fields: [gameId], references: [id])
