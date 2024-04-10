@@ -270,8 +270,8 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
             ...(content as ZapPowerContent),
             type: PowerType.LIGHTNING,
             amount,
+            zapReceipt: event,
           },
-          event,
           ctx,
         );
         debug('Published power events correctly');

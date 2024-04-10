@@ -30,6 +30,15 @@ export type PowerData = {
   message: string;
 };
 
+export type LightningPower = {
+  zapReceipt: NostrEvent;
+} & PowerData;
+
+export type OnchainPower = {
+  txId: string;
+  outputIndex: number;
+} & PowerData;
+
 /**
  * Updates a game based on power added
  *
@@ -41,10 +50,9 @@ export type PowerData = {
  *
  */
 async function updateGame(
-  powerData: PowerData,
+  powerData: LightningPower | OnchainPower,
   roundPlayer: RoundPlayer,
   prisma: PrismaClient,
-  zapReceipt?: NostrEvent,
 ): Promise<GameStateData> {
   const { amount, gameId } = powerData;
   const maxZap = amount < roundPlayer.maxZap ? roundPlayer.maxZap : amount;
@@ -63,16 +71,30 @@ async function updateGame(
       },
     },
   };
-  if (PowerType.LIGHTNING === powerData.type) {
-    if (!zapReceipt) {
-      throw new Error('A zap power needs a zapReceipt');
-    }
-    roundPlayerData.zapReceipts = {
-      create: {
-        id: zapReceipt.id!,
-        event: JSON.stringify(zapReceipt),
-      },
-    };
+  switch (powerData.type) {
+    case PowerType.LIGHTNING:
+      powerData = powerData as LightningPower;
+      roundPlayerData.zapReceipts = {
+        create: {
+          id: powerData.zapReceipt.id!,
+          event: JSON.stringify(powerData.zapReceipt),
+        },
+      };
+      break;
+    case PowerType.ONCHAIN:
+      powerData = powerData as OnchainPower;
+      roundPlayerData.txOutputs = {
+        connect: {
+          txId_outputIndex: {
+            txId: powerData.txId,
+            outputIndex: powerData.outputIndex,
+          },
+        },
+      };
+      break;
+    case PowerType.MASSACRE:
+    default:
+      throw new Error(`Unexpected power type: ${powerData.type}`);
   }
   return await prisma.game.update({
     data: {
@@ -106,11 +128,10 @@ async function updateGame(
  * @param ctx of the application
  */
 export async function addLightningPower(
-  powerData: PowerData,
-  zapReceipt: NostrEvent,
+  powerData: LightningPower,
   ctx: GameContext,
 ): Promise<void> {
-  const { gameId, walias, amount } = powerData;
+  const { gameId, walias, amount, zapReceipt } = powerData;
   const roundPlayer = await ctx.prisma.roundPlayer.findFirst({
     where: {
       player: { walias },
@@ -122,7 +143,7 @@ export async function addLightningPower(
     error('%s is not a player alive on %$s', walias, gameId);
     return;
   }
-  const game = await updateGame(powerData, roundPlayer, ctx.prisma, zapReceipt);
+  const game = await updateGame(powerData, roundPlayer, ctx.prisma);
   const powerReceipt = powerReceiptEvent(
     game,
     amount,
@@ -155,8 +176,7 @@ export async function addLightningPower(
  * @param ctx of the application
  */
 export async function addOnchainPower(
-  powerData: PowerData,
-  txId: string,
+  powerData: OnchainPower,
   ctx: GameContext,
 ): Promise<void> {
   const { gameId, walias, amount } = powerData;
@@ -172,18 +192,31 @@ export async function addOnchainPower(
     return;
   }
   const game = await updateGame(powerData, roundPlayer, ctx.prisma);
-  const powerReceipt = powerReceiptEvent(game, amount, powerData, txId);
+  const powerReceipt = powerReceiptEvent(
+    game,
+    amount,
+    powerData,
+    powerData.txId,
+  );
   await Promise.allSettled([
     ctx.outbox.publish(powerReceipt),
     ctx.outbox.publish(
       gameStateEvent(game, getEventHash(powerReceipt as UnsignedEvent)),
     ),
-  ]).then((results) => {
+  ]).then(async (results) => {
     log('Publish results: %O', results);
     if ('rejected' === results[0].status) {
       //TODO what to do?
     } else {
-      //TODO what to do?
+      await ctx.prisma.transactionOutput.update({
+        data: { isAnswered: true },
+        where: {
+          txId_outputIndex: {
+            txId: powerData.txId,
+            outputIndex: powerData.outputIndex,
+          },
+        },
+      });
     }
   });
 }

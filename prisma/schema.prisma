@@ -85,9 +85,10 @@ model RoundPlayer {
   zapped   BigInt @default(0)
   zapCount Int    @default(0) @map("zap_count")
 
-  player      Player       @relation(fields: [playerId], references: [id])
-  round       Round        @relation(fields: [roundId], references: [id])
-  zapReceipts ZapReceipt[] @relation
+  player      Player              @relation(fields: [playerId], references: [id])
+  round       Round               @relation(fields: [roundId], references: [id])
+  zapReceipts ZapReceipt[]        @relation
+  txOutputs   TransactionOutput[]
 
   @@id([playerId, roundId])
   @@map("round_player")
@@ -118,4 +119,26 @@ model ZapReceipt {
 
   roundPlayer RoundPlayer @relation(fields: [roundId, playerId], references: [roundId, playerId])
   ticket      Ticket?     @relation
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REJECTED
+}
+
+model TransactionOutput {
+  txId        String @map("tx_id")
+  outputIndex Int    @map("output_index")
+
+  roundId    String?           @map("round_id") @db.Uuid
+  playerId   String?           @map("player_id") @db.Uuid
+  isAnswered Boolean           @default(false) @map("is_answered")
+  status     TransactionStatus @default(PENDING)
+
+  roundPlayer RoundPlayer? @relation(fields: [roundId, playerId], references: [roundId, playerId])
+
+  @@unique([txId, outputIndex])
+  @@map("transaction_output")
 }
