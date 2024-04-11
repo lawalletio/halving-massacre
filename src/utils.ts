@@ -18,6 +18,7 @@ export const WALIAS_RE =
 export enum ZapType {
   TICKET = 'TICKET',
   POWER = 'POWER',
+  ONCHAIN_ADDRESS = 'ONCHAIN_ADDRESS',
 }
 
 export type ZapTicketContent = {
@@ -89,6 +90,66 @@ export function gameStateEvent(
       ['L', 'halving-massacre'],
       ['l', 'state', 'halving-massacre'],
       ['block', game.currentBlock.toString()],
+    ],
+    created_at: nowInSeconds(),
+  };
+}
+
+export const PROFILE_SELECT = Prisma.validator<Prisma.PlayerSelect>()({
+  walias: true,
+  power: true,
+  deathRound: { select: { number: true } },
+  game: { select: { id: true, currentBlock: true } },
+  roundPlayers: {
+    select: {
+      maxZap: true,
+      zapped: true,
+      zapCount: true,
+      round: { select: { number: true } },
+    },
+    orderBy: {
+      round: { number: Prisma.SortOrder.asc },
+    },
+  },
+});
+export type Profile = Prisma.PlayerGetPayload<{
+  select: typeof PROFILE_SELECT;
+}>;
+
+/**
+ * Creates a profile event
+ *
+ * @param player with the information necesary for the event
+ * @param lastModifier the id of the event that modified this profile
+ * @return the profile nostr event
+ */
+export function profileEvent(
+  player: Profile,
+  lastModifier: string,
+): NostrEvent {
+  const rounds = player.roundPlayers.map((rp) => ({
+    maxZap: Number(rp.maxZap),
+    zapped: Number(rp.zapped),
+    zapCount: rp.zapCount,
+    number: rp.round.number,
+  }));
+  const content = JSON.stringify({
+    walias: player.walias,
+    power: Number(player.power),
+    deathRound: player.deathRound?.number ?? null,
+    rounds,
+  });
+  return {
+    content,
+    pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
+    kind: Kind.PARAMETRIZED_REPLACEABLE,
+    tags: [
+      ['d', `profile:${player.game.id}:${player.walias}`],
+      ['e', player.game.id, '', 'setup'],
+      ['e', lastModifier, '', 'lastModifier'],
+      ['L', 'halving-massacre'],
+      ['l', 'profile', 'halving-massacre'],
+      ['block', player.game.currentBlock.toString()],
     ],
     created_at: nowInSeconds(),
   };

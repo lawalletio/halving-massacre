@@ -276,6 +276,23 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
         );
         debug('Published power events correctly');
         break;
+      case ZapType.ONCHAIN_ADDRESS.valueOf():
+          debug('Generating onchain address: %O', content);
+          // TODO: Validate that the player has not an address already
+  
+          // const index = 0; // This index should autoincrease on each new address created
+          // const zpub = requiredEnvVar('ONCHAIN_ZPUB_KEY');
+  
+          // const BIP84 = require('bip84')
+          // const account = new BIP84.fromZPub(zpub);
+  
+          // // Path : m/84'/1'/0'/0/1
+          // const address = account.getAddress(index);
+  
+          // Update the prisma player profile with the new address
+  
+          // Publish updated profile event
+        break;
       default:
         error('Invalid type: %s', content.type.toUpperCase());
         break;
