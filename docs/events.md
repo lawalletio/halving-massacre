@@ -51,7 +51,7 @@
     "rounds": [
       {
         "number": round_number,
-        "isCurrent": boolean,
+        "maxZap": highest_zap,
         "zapped": zapped_amount,
         "zapCount": zap_times
       }

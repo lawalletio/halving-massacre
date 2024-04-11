@@ -10,7 +10,6 @@ import {
   ZapPowerContent,
   ZapTicketContent,
   ZapType,
-  gameStateEvent,
   powerReceiptEvent,
   ticketEvent,
 } from '../utils';
@@ -106,22 +105,24 @@ async function addPower(
     content,
     zapReceiptEvent.id!,
   );
-  await Promise.allSettled([
-    ctx.outbox.publish(powerReceipt),
-    ctx.outbox.publish(
-      gameStateEvent(game, getEventHash(powerReceipt as UnsignedEvent)),
-    ),
-  ]).then(async (results) => {
-    log('Publish results: %O', results);
-    if ('rejected' === results[0].status) {
-      await republishEvents(zapReceiptEvent, ctx);
-    } else {
-      await ctx.prisma.zapReceipt.update({
-        data: { isAnswered: true },
-        where: { id: zapReceiptEvent.id! },
-      });
-    }
-  });
+  ctx.statePublisher.queueProfile(
+    game.id,
+    walias,
+    getEventHash(powerReceipt as UnsignedEvent),
+  );
+  await Promise.allSettled([ctx.outbox.publish(powerReceipt)]).then(
+    async (results) => {
+      log('Publish results: %O', results);
+      if ('rejected' === results[0].status) {
+        await republishEvents(zapReceiptEvent, ctx);
+      } else {
+        await ctx.prisma.zapReceipt.update({
+          data: { isAnswered: true },
+          where: { id: zapReceiptEvent.id! },
+        });
+      }
+    },
+  );
 }
 
 async function consumeTicket(
@@ -190,12 +191,14 @@ async function consumeTicket(
     { message: 'Your first power!', walias: ticket.walias },
     zapReceiptId,
   );
+  ctx.statePublisher.queueProfile(
+    game.id,
+    ticket.walias,
+    getEventHash(ticketE as UnsignedEvent),
+  );
   await Promise.allSettled([
     ctx.outbox.publish(ticketE),
     ctx.outbox.publish(powerReceipt),
-    ctx.outbox.publish(
-      gameStateEvent(game, getEventHash(ticketE as UnsignedEvent)),
-    ),
   ]).then(async (results) => {
     log('Publish results: %O', results);
     if ('rejected' === results[0].status) {
