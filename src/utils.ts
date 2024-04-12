@@ -8,6 +8,7 @@ import NDK, {
 } from '@nostr-dev-kit/ndk';
 import { makeZapRequest } from 'nostr-tools/nip57';
 import { PowerData } from '@services/power';
+import { createHmac } from 'crypto';
 
 const log: Debugger = logger.extend('utils');
 const error: Debugger = log.extend('error');
@@ -371,4 +372,15 @@ export class Queue<T> {
   public peek(): T | undefined {
     return this.#head?.value;
   }
+}
+
+export function verifySignature(
+  payload: unknown,
+  secret: string,
+  signature: string,
+) {
+  return (
+    signature ===
+    createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex')
+  );
 }
