@@ -1,6 +1,6 @@
 # Add Power
 
-This endpoint is used for adding power for a user that is currently alive within the game and the game is accepting power (SETUP, INITIAL or NORMAL)
+This endpoint is used for adding power for a user that is currently alive within the game and the game is accepting power (SETUP, CLOSED, INITIAL or NORMAL)
 
 ```sh
 curl --request GET \

@@ -12,7 +12,7 @@ const log: Debugger = logger.extend('rest:game:gameId:ticket:post');
 const trace: Debugger = log.extend('trace');
 const debug: Debugger = log.extend('debug');
 
-const VALID_STATUSES: Status[] = [Status.SETUP, Status.INITIAL];
+const VALID_STATUSES: Status[] = [Status.SETUP];
 
 type RequestBody = {
   walias: string;

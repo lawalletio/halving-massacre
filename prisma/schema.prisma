@@ -9,6 +9,7 @@ datasource db {
 
 enum Status {
   SETUP
+  CLOSED
   INITIAL
   NORMAL
   FREEZE
@@ -27,10 +28,6 @@ model Game {
   currentBlock       Int    @map("current_block")
   currentPool        BigInt @map("current_pool")
   currentRoundNumber Int    @map("current_round_number")
-  freezeDuration     Int?   @map("freeze_duration")
-  nextFreeze         Int?   @map("next_freeze")
-  nextMassacre       Int?   @map("next_massacre")
-  roundLength        Int?   @map("round_length")
   status             Status
   poolPubKey         String @map("pool_pub_key")
 
@@ -45,12 +42,19 @@ model Game {
 model Round {
   id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   gameId String @map("game_id")
-  number Int
+
+  number         Int
+  nextRoundId    String? @unique @map("next_round_id") @db.Uuid
+  massacreHeight Int?    @map("massacre_height")
+  freezeHeight   Int?    @map("freeze_height")
+  survivors      Int?
 
   game         Game          @relation("gameRounds", fields: [gameId], references: [id])
   deadPlayers  Player[]      @relation("deadPlayers")
   roundPlayers RoundPlayer[] @relation
   Game         Game[]
+  nextRound    Round?        @relation("nextRound", fields: [nextRoundId], references: [id])
+  prevRound    Round?        @relation("nextRound")
 
   @@unique([gameId, number])
   @@map("round")

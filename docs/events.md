@@ -22,9 +22,7 @@
     },
     "nextFreeze": blockNumber,
     "nextMassacre": blockNumber,
-    "status": "SETUP" | "INITIAL" | "NORMAL" | "FREEZE" | "FINAL"
-    "roundLength": number,
-    "freezeDuration": number,
+    "status": "SETUP" | "CLOSED" | "INITIAL" | "NORMAL" | "FREEZE" | "FINAL"
     "playerCount": number_of_players
  },
  ...(id, pubkey, sig, created_at)
@@ -135,9 +133,14 @@
     ["block", "current_block"]
   ],
   "content": JSON.stringify({
-      "initialBlock": number,
-      "lockDuration": number,
-      "roundLength": number,
+    "massacreSchedule": [
+      {
+        "height": massacre_block_height,
+        "survivors": number_of_survivors,
+        "freezeHeight": freeze_block_height,
+        "nextMassacre": index | null,
+      },
+    ],
   }),
  ...(id, pubkey, sig, created_at)
 ```

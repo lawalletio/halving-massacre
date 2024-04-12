@@ -9,16 +9,21 @@ import { Debugger } from 'debug';
 const log: Debugger = logger.extend('rest:game:gameId:power:get');
 const warn: Debugger = log.extend('warn');
 
-const VALID_STATUSES: Status[] = [Status.SETUP, Status.INITIAL, Status.NORMAL];
+const VALID_STATUSES: Status[] = [
+  Status.SETUP,
+  Status.CLOSED,
+  Status.INITIAL,
+  Status.NORMAL,
+];
 
 const GAME_SELECT = Prisma.validator<Prisma.GameSelect>()({
   minBet: true,
-  nextMassacre: true,
   status: true,
   poolPubKey: true,
   currentRound: {
     select: {
       roundPlayers: { select: { player: { select: { walias: true } } } },
+      massacreHeight: true,
     },
   },
 });
@@ -103,7 +108,7 @@ async function handler<Context extends GameContext>(
   if (!VALID_STATUSES.includes(game.status)) {
     res.status(409).send({
       success: false,
-      message: `This game is not accepting power wait for block: ${game.nextMassacre}`,
+      message: `This game is not accepting power wait for block: ${game.currentRound.massacreHeight}`,
     });
     return;
   }
