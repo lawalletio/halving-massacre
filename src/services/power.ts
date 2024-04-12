@@ -36,7 +36,7 @@ export type LightningPower = {
 
 export type OnchainPower = {
   txId: string;
-  outputIndex: number;
+  playerId: string;
 } & PowerData;
 
 /**
@@ -85,9 +85,9 @@ async function updateGame(
       powerData = powerData as OnchainPower;
       roundPlayerData.txOutputs = {
         connect: {
-          txId_outputIndex: {
+          txId_playerId: {
             txId: powerData.txId,
-            outputIndex: powerData.outputIndex,
+            playerId: powerData.playerId,
           },
         },
       };
@@ -211,9 +211,9 @@ export async function addOnchainPower(
       await ctx.prisma.transactionOutput.update({
         data: { isAnswered: true },
         where: {
-          txId_outputIndex: {
+          txId_playerId: {
             txId: powerData.txId,
-            outputIndex: powerData.outputIndex,
+            playerId: powerData.playerId,
           },
         },
       });

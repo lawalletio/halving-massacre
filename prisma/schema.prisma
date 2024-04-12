@@ -130,16 +130,23 @@ enum TransactionStatus {
 }
 
 model TransactionOutput {
-  txId        String @map("tx_id")
-  outputIndex Int    @map("output_index")
+  txId String @map("tx_id")
 
   roundId    String?           @map("round_id") @db.Uuid
-  playerId   String?           @map("player_id") @db.Uuid
+  playerId   String            @map("player_id") @db.Uuid
   isAnswered Boolean           @default(false) @map("is_answered")
   status     TransactionStatus @default(PENDING)
 
   roundPlayer RoundPlayer? @relation(fields: [roundId, playerId], references: [roundId, playerId])
 
-  @@unique([txId, outputIndex])
+  @@unique([txId, playerId])
   @@map("transaction_output")
+}
+
+model OnchainWallet {
+  xPubKey String @id @map("x_pub_key")
+
+  lastIndex Int @default(0)
+
+  @@map("onchain_wallet")
 }
