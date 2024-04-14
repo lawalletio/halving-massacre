@@ -3,17 +3,22 @@ import {
   DefaultContext,
   DirectOutbox,
   requiredEnvVar,
+  logger,
 } from '@lawallet/module';
 import NDK, { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
 import { PrismaClient } from '@prisma/client';
+import { OnchainService } from '@services/onchain/service';
 import { StatePublisher } from '@services/statePublisher';
 import { startMempoolSpaceConnection } from '@src/mempoolspace';
+import { Debugger } from 'debug';
 
 export type GameContext = {
   prisma: PrismaClient;
   writeNDK: NDK;
   statePublisher: StatePublisher;
 } & DefaultContext;
+
+const log: Debugger = logger.extend('main');
 
 const writeNDK = new NDK({
   explicitRelayUrls: requiredEnvVar('NOSTR_WRITE_RELAYS')
@@ -35,6 +40,7 @@ const readNDK = new NDK({
 const prisma = new PrismaClient();
 const outbox = new DirectOutbox(writeNDK);
 const statePublisher = new StatePublisher(outbox, prisma);
+const onchainService = new OnchainService();
 const context: GameContext = { outbox, prisma, writeNDK, statePublisher };
 
 const module = Module.build<GameContext>({
@@ -46,5 +52,15 @@ const module = Module.build<GameContext>({
   readNDK,
 });
 
-startMempoolSpaceConnection(prisma);
-void module.start();
+void (async () => {
+  log('Getting addresses');
+  const addresses = await onchainService.getAddresses();
+  log('Getting pending transactions');
+  const txs = await onchainService.getPendingTransactions();
+  log('Start mempoolspace connection');
+  console.info('Getting addresses');
+  startMempoolSpaceConnection(addresses, txs, prisma);
+  log('Start module');
+  console.info('Start module');
+  void module.start();
+})();
