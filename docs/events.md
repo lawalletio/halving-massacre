@@ -196,21 +196,21 @@
     ["L", "halving-massacre"],
     ["l", "massacre", "halving-massacre"],
     ["block", "<current_block>"],
-    ["hash", "<massacre_block_hash>"]
+    ["hash", "<massacre_block_hash>"],
+    ["t", "round:<round_number>"]
   ],
   "content": JSON.stringify({
     "block": {
       "id": "<massacre_block_id>",
-      "header": "<massacre_block_-_header>",
-      "height": <massacre_block_height>,
-      "merkleRoot": "<massacre_block_merkle_root>"
+      "header": "<massacre_block_header>",
+      "height": <massacre_block_height>
     },
     "players": {
       "<walias>": <power_for_walias>,
       ...
     },
     "deadPlayers": [
-      "<dead_plyer_walias>",
+      "<dead_player_walias>",
       ...
     ]
   }),

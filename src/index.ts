@@ -46,5 +46,5 @@ const module = Module.build<GameContext>({
   readNDK,
 });
 
-startMempoolSpaceConnection(prisma);
+startMempoolSpaceConnection(context);
 void module.start();

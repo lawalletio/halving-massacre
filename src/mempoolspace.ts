@@ -1,7 +1,11 @@
 import { logger, requiredEnvVar } from '@lawallet/module';
-import { PrismaClient, Status } from '@prisma/client';
+import { Status } from '@prisma/client';
 import { Debugger } from 'debug';
 import WebSocket from 'ws';
+import { GAME_STATE_SELECT } from '@src/utils';
+import { GameContext } from '@src/index';
+import { freezeGame } from '@lib/freeze';
+import { applyMassacre } from '@lib/massacre';
 
 const log: Debugger = logger.extend('mempoolspace');
 
@@ -30,20 +34,7 @@ export type MsBlock = {
   };
 };
 
-/*
-const GAME_UPDATE_QUEUE = new Queue<() => Promise<void>>();
-
-setInterval(() => {
-  const p = GAME_UPDATE_QUEUE.dequeue();
-  if (p) {
-    void (async () => {
-      await p();
-    })();
-  }
-}, 100);
-*/
-
-export function startMempoolSpaceConnection(prisma: PrismaClient) {
+export function startMempoolSpaceConnection(ctx: GameContext) {
   const ws = new WebSocket(requiredEnvVar('MEMPOOL_WS_URL'));
   ws.on('open', () => {
     ws.send(JSON.stringify({ action: 'want', data: ['blocks'] }));
@@ -65,10 +56,45 @@ export function startMempoolSpaceConnection(prisma: PrismaClient) {
     if (currentBlock) {
       void (async () => {
         log('New block found: %O', currentBlock);
-        await prisma.game.updateMany({
+        await ctx.prisma.game.updateMany({
           data: { currentBlock: currentBlock.height },
           where: { status: { not: Status.FINAL } },
         });
+        const games = await ctx.prisma.game.findMany({
+          select: GAME_STATE_SELECT,
+          where: {
+            OR: [
+              {
+                status: { in: [ Status.INITIAL, Status.NORMAL ] },
+                currentRound: { freezeHeight: currentBlock.height },
+              },
+              {
+                status: Status.FREEZE,
+                currentRound: { massacreHeight: currentBlock.height },
+              },
+            ],
+          },
+        });
+        const promises: Promise<void>[] = [];
+        for (const game of games) {
+          switch (game.status) {
+            case Status.INITIAL:
+            case Status.NORMAL:
+              promises.push(freezeGame(game.id, ctx));
+              break;
+            case Status.FREEZE:
+              if (game.currentRound.nextRound) {
+                promises.push(applyMassacre(game, currentBlock, ctx));
+              } else {
+                //TODO final massacre
+              }
+              break;
+            default:
+              //TODO what to do
+              break;
+          }
+        }
+        await Promise.allSettled(promises);
       })();
     }
   });
