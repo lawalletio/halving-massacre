@@ -6,6 +6,7 @@ import {
 } from '@lawallet/module';
 import NDK, { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
 import { PrismaClient } from '@prisma/client';
+import { OnchainService } from '@services/onchain/service';
 import { StatePublisher } from '@services/statePublisher';
 import { startMempoolSpaceConnection } from '@src/mempoolspace';
 
@@ -13,6 +14,7 @@ export type GameContext = {
   prisma: PrismaClient;
   writeNDK: NDK;
   statePublisher: StatePublisher;
+  onchain: OnchainService;
 } & DefaultContext;
 
 const writeNDK = new NDK({
@@ -35,7 +37,15 @@ const readNDK = new NDK({
 const prisma = new PrismaClient();
 const outbox = new DirectOutbox(writeNDK);
 const statePublisher = new StatePublisher(outbox, prisma);
-const context: GameContext = { outbox, prisma, writeNDK, statePublisher };
+const onchain = new OnchainService({ prisma });
+
+const context: GameContext = {
+  outbox,
+  prisma,
+  writeNDK,
+  statePublisher,
+  onchain,
+};
 
 const module = Module.build<GameContext>({
   context,
@@ -46,5 +56,9 @@ const module = Module.build<GameContext>({
   readNDK,
 });
 
-startMempoolSpaceConnection(prisma);
-void module.start();
+void (async () => {
+  await onchain.init();
+
+  startMempoolSpaceConnection(prisma);
+  void module.start();
+})();
