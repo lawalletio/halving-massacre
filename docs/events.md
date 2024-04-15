@@ -179,25 +179,6 @@
 }
 ```
 
-### Change round length
-
-```json
-{
-  "kind": 1112,
-  "tags": [
-    ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
-    ["L", "halving-massacre"],
-    ["l", "change-round-length", "halving-massacre"],
-    ["block", "<current_block>"]
-  ],
-  "content": JSON.stringify({
-    "roundLength": <number_of_round_blocks>,
-    "freezeTimeout": <number_of_freeze_blocks>
-  }),
-  ...
-}
-```
-
 ### Massacre
 
 ```json
