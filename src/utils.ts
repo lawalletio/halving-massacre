@@ -10,6 +10,7 @@ import { makeZapRequest } from 'nostr-tools/nip57';
 
 const log: Debugger = logger.extend('utils');
 const error: Debugger = log.extend('error');
+const warn: Debugger = log.extend('warn');
 
 export const WALIAS_RE =
   /(?<username>^[A-Z0-9._-]{1,64})@(?<domain>(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63})$/i;
@@ -32,17 +33,22 @@ export type ZapPowerContent = {
   message: string;
 };
 
+export type MassacreSchedule = {
+  height: number;
+  survivors: number;
+  freezeHeight: number;
+  nextMassacre: number | null;
+};
+
 export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
   id: true,
   currentBlock: true,
-  nextFreeze: true,
-  nextMassacre: true,
   status: true,
-  roundLength: true,
-  freezeDuration: true,
   currentPool: true,
   currentRound: {
     select: {
+      massacreHeight: true,
+      freezeHeight: true,
       roundPlayers: {
         select: { player: { select: { walias: true, power: true } } },
         orderBy: { player: { power: Prisma.SortOrder.desc } },
@@ -66,16 +72,18 @@ export function gameStateEvent(
   game: GameStateData,
   lastModifier: string,
 ): NostrEvent {
-  const { currentRound, currentPool, ...rest } = game;
+  const { currentRound, currentPool, _count, ...rest } = game;
   const top100Players = powerByPlayer(
     currentRound.roundPlayers.map((rp) => rp.player),
     100,
   );
   const content = JSON.stringify({
     ...rest,
+    nextMassacre: currentRound.massacreHeight,
+    nextFreeze: currentRound.freezeHeight,
     currentPool: Number(currentPool),
     top100Players,
-    playerCount: game._count.players,
+    playerCount: _count.players,
   });
   return {
     content,
@@ -239,6 +247,25 @@ export function ticketEvent(
   };
 }
 
+export function startEvent(
+  game: Pick<GameStateData, 'id' | 'currentBlock'>,
+  massacreSchedule: MassacreSchedule[],
+): NostrEvent {
+  const content = JSON.stringify({ massacreSchedule });
+  return {
+    content,
+    pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
+    kind: Kind.REGULAR,
+    tags: [
+      ['e', game.id, '', 'setup'],
+      ['L', 'halving-massacre'],
+      ['l', 'start', 'halving-massacre'],
+      ['block', game.currentBlock.toString()],
+    ],
+    created_at: nowInSeconds(),
+  };
+}
+
 export type Lud06Response = {
   pr: string;
   routes: never[];
@@ -345,28 +372,10 @@ export async function getInvoice(
   return (await res.json()) as Lud06Response;
 }
 
-type Link<T> = {
-  value: T;
-  next: Link<T> | undefined;
-};
-export class Queue<T> {
-  #head: Link<T> | undefined;
-  #tail: Link<T> | undefined;
-
-  public enqueue(value: T): void {
-    const link = { value, next: undefined };
-    this.#tail = this.#head ? (this.#tail!.next = link) : (this.#head = link);
+export function validSafePositive(n: unknown): number | null {
+  if ('number' === typeof n && Number.isSafeInteger(n) && 0 <= n) {
+    return n;
   }
-
-  public dequeue(): T | undefined {
-    if (this.#head) {
-      const value = this.#head.value;
-      this.#head = this.#head.next;
-      return value;
-    }
-    return undefined;
-  }
-  public peek(): T | undefined {
-    return this.#head?.value;
-  }
+  warn('%O is not a valid safe positive');
+  return null;
 }
