@@ -95,7 +95,6 @@ function deserializeSchedule(
 function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
   return async (event: NostrEvent): Promise<void> => {
     debug('Received event %s', event.id);
-    console.dir(event.tags);
     const gameId = event.tags
       .find((t) => 'e' === t[0] && 'setup' === t[3])
       ?.at(1);
