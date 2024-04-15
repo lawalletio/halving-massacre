@@ -1,5 +1,5 @@
 import { Kind, logger, nowInSeconds, requiredEnvVar } from '@lawallet/module';
-import { Prisma } from '@prisma/client';
+import { Player, Prisma } from '@prisma/client';
 import { Debugger } from 'debug';
 import NDK, {
   NDKEvent,
@@ -13,7 +13,6 @@ const error: Debugger = log.extend('error');
 
 export const WALIAS_RE =
   /(?<username>^[A-Z0-9._-]{1,64})@(?<domain>(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63})$/i;
-const LUD06_CALLBACK = `${requiredEnvVar('LW_API_ENDPOINT')}/lnurlp/${requiredEnvVar('NOSTR_PUBLIC_KEY')}/callback`;
 
 export enum ZapType {
   TICKET = 'TICKET',
@@ -30,6 +29,7 @@ export type ZapPowerContent = {
   type: ZapType.POWER;
   gameId: string;
   walias: string;
+  message: string;
 };
 
 export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
@@ -46,7 +46,6 @@ export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
       roundPlayers: {
         select: { player: { select: { walias: true, power: true } } },
         orderBy: { player: { power: Prisma.SortOrder.desc } },
-        take: 100,
       },
     },
   },
@@ -67,17 +66,14 @@ export function gameStateEvent(
   game: GameStateData,
   lastModifier: string,
 ): NostrEvent {
-  const { currentRound, ...rest } = game;
-  const playerEntries = currentRound.roundPlayers.map((rp) => [
-    rp.player.walias,
-    rp.player.power,
-  ]);
-  const top100Players = Object.fromEntries(playerEntries) as Record<
-    string,
-    string
-  >;
+  const { currentRound, currentPool, ...rest } = game;
+  const top100Players = powerByPlayer(
+    currentRound.roundPlayers.map((rp) => rp.player),
+    100,
+  );
   const content = JSON.stringify({
     ...rest,
+    currentPool: Number(currentPool),
     top100Players,
     playerCount: game._count.players,
   });
@@ -97,6 +93,84 @@ export function gameStateEvent(
   };
 }
 
+export const PROFILE_SELECT = Prisma.validator<Prisma.PlayerSelect>()({
+  walias: true,
+  power: true,
+  deathRound: { select: { number: true } },
+  game: { select: { id: true, currentBlock: true } },
+  roundPlayers: {
+    select: {
+      maxZap: true,
+      zapped: true,
+      zapCount: true,
+      round: { select: { number: true } },
+    },
+    orderBy: {
+      round: { number: Prisma.SortOrder.asc },
+    },
+  },
+});
+export type Profile = Prisma.PlayerGetPayload<{
+  select: typeof PROFILE_SELECT;
+}>;
+
+/**
+ * Creates a profile event
+ *
+ * @param player with the information necesary for the event
+ * @param lastModifier the id of the event that modified this profile
+ * @return the profile nostr event
+ */
+export function profileEvent(
+  player: Profile,
+  lastModifier: string,
+): NostrEvent {
+  const rounds = player.roundPlayers.map((rp) => ({
+    maxZap: Number(rp.maxZap),
+    zapped: Number(rp.zapped),
+    zapCount: rp.zapCount,
+    number: rp.round.number,
+  }));
+  const content = JSON.stringify({
+    walias: player.walias,
+    power: Number(player.power),
+    deathRound: player.deathRound?.number ?? null,
+    rounds,
+  });
+  return {
+    content,
+    pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
+    kind: Kind.PARAMETRIZED_REPLACEABLE,
+    tags: [
+      ['d', `profile:${player.game.id}:${player.walias}`],
+      ['e', player.game.id, '', 'setup'],
+      ['e', lastModifier, '', 'lastModifier'],
+      ['L', 'halving-massacre'],
+      ['l', 'profile', 'halving-massacre'],
+      ['block', player.game.currentBlock.toString()],
+    ],
+    created_at: nowInSeconds(),
+  };
+}
+
+/**
+ * Build a dictionaty of players with their powers
+ *
+ * @param players list of player with walias and power, we assume it to be
+ * sorted
+ * @param topN optional param to indicate how many results we want to provide
+ * @return a dictionary where the keys are the waliases and the value is power
+ */
+export function powerByPlayer(
+  players: Pick<Player, 'walias' | 'power'>[],
+  topN?: number,
+): { [key: string]: number } {
+  if (topN && topN < players.length) {
+    players.length = topN;
+  }
+  return Object.fromEntries(players.map((p) => [p.walias, Number(p.power)]));
+}
+
 /**
  * Generate the event for a power receipt
  *
@@ -109,11 +183,13 @@ export function gameStateEvent(
 export function powerReceiptEvent(
   game: Pick<GameStateData, 'id' | 'currentBlock'>,
   amount: number,
-  walias: string,
+  zapReceiptContent: Pick<ZapPowerContent, 'message' | 'walias'>,
   zapReceiptId: string,
 ): NostrEvent {
+  const { message, walias } = zapReceiptContent;
   const content = JSON.stringify({
     amount,
+    message,
     player: walias,
   });
   return {
@@ -194,12 +270,13 @@ export function validWalias(input: unknown): string {
  * @return the signed zap request event
  */
 async function signedZapRequest(
+  profile: string,
   amount: number,
   event: string,
   comment: string,
 ): Promise<NostrEvent> {
   const zr = makeZapRequest({
-    profile: requiredEnvVar('NOSTR_PUBLIC_KEY'),
+    profile,
     event,
     amount,
     comment,
@@ -213,6 +290,25 @@ async function signedZapRequest(
 }
 
 /**
+ * Build lud06 callback
+ *
+ * @param pubKey lawallet user where the funds will be accredited
+ * @param amount to create the invoice for
+ * @param comment to include in the lud06
+ * @param zapRequest stringify zapRequest
+ */
+function lud06Callback(
+  pubKey: string,
+  amount: number,
+  comment: string,
+  zapRequest: string,
+): string {
+  comment = encodeURIComponent(comment);
+  zapRequest = encodeURIComponent(zapRequest);
+  return `${requiredEnvVar('LW_API_ENDPOINT')}/lnurlp/${pubKey}/callback?amount=${amount.toString()}&comment=${comment}&nostr=${zapRequest}`;
+}
+
+/**
  * Generates an invoice for our own account and return the response
  *
  * @param amount to generate the invoice for
@@ -222,14 +318,21 @@ async function signedZapRequest(
  */
 export async function getInvoice(
   eventId: string,
+  poolPubKey: string,
   amount: number,
-  comment: string,
+  content: string,
+  comment: string = '',
 ): Promise<Lud06Response> {
-  const zr = await signedZapRequest(Number(amount), eventId, comment);
+  const zr = await signedZapRequest(
+    poolPubKey,
+    Number(amount),
+    eventId,
+    content,
+  );
   let res;
   try {
     res = await fetch(
-      `${LUD06_CALLBACK}?amount=${amount.toString()}&comment=${comment}&nostr=${JSON.stringify(zr)}`,
+      lud06Callback(poolPubKey, amount, comment, JSON.stringify(zr)),
     );
   } catch (err: unknown) {
     error('Error generating invoice: %O', err);
@@ -240,4 +343,30 @@ export async function getInvoice(
     throw new Error('Error generating invoice');
   }
   return (await res.json()) as Lud06Response;
+}
+
+type Link<T> = {
+  value: T;
+  next: Link<T> | undefined;
+};
+export class Queue<T> {
+  #head: Link<T> | undefined;
+  #tail: Link<T> | undefined;
+
+  public enqueue(value: T): void {
+    const link = { value, next: undefined };
+    this.#tail = this.#head ? (this.#tail!.next = link) : (this.#head = link);
+  }
+
+  public dequeue(): T | undefined {
+    if (this.#head) {
+      const value = this.#head.value;
+      this.#head = this.#head.next;
+      return value;
+    }
+    return undefined;
+  }
+  public peek(): T | undefined {
+    return this.#head?.value;
+  }
 }

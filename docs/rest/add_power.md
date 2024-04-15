@@ -4,12 +4,14 @@ This endpoint is used for adding power for a user that is currently alive within
 
 ```sh
 curl --request GET \
-  --url 'http://https/<apiendpoint>/games/<gameId>/power?amount=&walias='
+  --url
+  'http://https/<apiendpoint>/games/<gameId>/power?amount=&walias=&message='
 ```
 
 ## Method, URL and params
 
-`GET https://<apidomain>/games/<gameId>/power?amount=<amount>&walias=<walias>`
+`GET
+https://<apidomain>/games/<gameId>/power?amount=<amount>&walias=<walias>&message=`
 
 ### Path params
 
@@ -19,6 +21,7 @@ curl --request GET \
 
 - `amount`: in millisats to be added as power for the walias, must be equal or greater than the min power stipulated by the setup event
 - `walias`: of the player, must already have bought a ticket and be alive in the current round
+- `message`: for the player, must be less than 255 chars long
 
 ## Response body
 

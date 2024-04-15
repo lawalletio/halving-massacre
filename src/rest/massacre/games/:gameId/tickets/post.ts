@@ -72,6 +72,7 @@ const GAME_SELECT = Prisma.validator<Prisma.GameSelect>()({
   id: true,
   ticketPrice: true,
   status: true,
+  poolPubKey: true,
   players: {
     select: {
       walias: true,
@@ -169,7 +170,8 @@ async function handler<Context extends GameContext>(
   try {
     lud06Res = await getInvoice(
       eTag,
-      game.ticketPrice,
+      game.poolPubKey,
+      Number(game.ticketPrice),
       JSON.stringify(content),
     );
   } catch (err: unknown) {

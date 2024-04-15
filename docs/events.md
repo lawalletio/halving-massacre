@@ -51,7 +51,7 @@
     "rounds": [
       {
         "number": round_number,
-        "isCurrent": boolean,
+        "maxZap": highest_zap,
         "zapped": zapped_amount,
         "zapCount": zap_times
       }
@@ -118,7 +118,8 @@
   ],
   "content": {
       "amount": millisats,
-      "player": "walias"
+      "player": "walias",
+      "message": "message"
   }
  ...(id, pubkey, sig, created_at)
 ```
