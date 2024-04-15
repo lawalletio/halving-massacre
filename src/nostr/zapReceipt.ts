@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 import {
   EventHandler,
   getTagValue,
@@ -277,19 +278,18 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
         debug('Published power events correctly');
         break;
       case ZapType.ONCHAIN_ADDRESS.valueOf():
+        console.info('Generating onchain address:');
+
         debug('Generating onchain address: %O', content);
-        // TODO: Validate that the player has not an address already
+        const walias = (content as ZapPowerContent).walias;
+        const address = await ctx.onchain.generatePlayerAddress(
+          (content as ZapPowerContent).walias,
+        );
 
-        // const index = 0; // This index should autoincrease on each new address created
-        // const zpub = requiredEnvVar('ONCHAIN_ZPUB_KEY');
-
-        // const BIP84 = require('bip84')
-        // const account = new BIP84.fromZPub(zpub);
-
-        // // Path : m/84'/1'/0'/0/1
-        // const address = account.getAddress(index);
-
-        // Update the prisma player profile with the new address
+        console.dir({
+          address,
+          walias,
+        });
 
         // Publish updated profile event
         break;
