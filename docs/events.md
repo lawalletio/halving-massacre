@@ -25,7 +25,14 @@
     "nextFreeze": <next_freeze_block_number>,
     "nextMassacre": <next_massacre_block_number>,
     "status": "<SETUP | CLOSED | INITIAL | NORMAL | FREEZE | FINAL>",
-    "playerCount": <number_of_players>
+    "playerCount": <number_of_players>,
+    "buckets": [
+      {
+        "max": <max_power_of_bucket>,
+        "min": <min_power_of_bucket>
+      },
+      ...
+    ]
   }),
   ...
 }

@@ -7,6 +7,7 @@ import NDK, {
   NostrEvent,
 } from '@nostr-dev-kit/ndk';
 import { makeZapRequest } from 'nostr-tools/nip57';
+import { bucketize } from '@lib/lottery';
 
 const log: Debugger = logger.extend('utils');
 const error: Debugger = log.extend('error');
@@ -73,17 +74,15 @@ export function gameStateEvent(
   lastModifier: string,
 ): NostrEvent {
   const { currentRound, currentPool, _count, ...rest } = game;
-  const top100Players = powerByPlayer(
-    currentRound.roundPlayers.map((rp) => rp.player),
-    100,
-  );
+  const players = currentRound.roundPlayers.map((rp) => rp.player);
   const content = JSON.stringify({
     ...rest,
     nextMassacre: currentRound.massacreHeight,
     nextFreeze: currentRound.freezeHeight,
     currentPool: Number(currentPool),
-    top100Players,
+    top100Players: powerByPlayer(players, 100),
     playerCount: _count.players,
+    buckets: bucketize(powerByPlayer(players)),
   });
   return {
     content,
@@ -174,7 +173,7 @@ export function powerByPlayer(
   topN?: number,
 ): { [key: string]: number } {
   if (topN && topN < players.length) {
-    players.length = topN;
+    players = players.slice(0, topN);
   }
   return Object.fromEntries(players.map((p) => [p.walias, Number(p.power)]));
 }
