@@ -9,7 +9,7 @@ module.exports = {
   extensionsToTreatAsEsm: ['.ts'],
   logHeapUsage: true,
   passWithNoTests: true,
-  //preset: 'ts-jest',
+  // preset: 'ts-jest',
   randomize: true,
   resetModules: true,
   restoreMocks: false,
