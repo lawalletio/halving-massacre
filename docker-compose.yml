@@ -10,7 +10,11 @@ services:
       POSTGRES_PASSWORD: massacre
       POSTGRES_DB: halving-massacre
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -h localhost -d halving-massacre"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U root -h localhost -d halving-massacre"
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,7 +24,12 @@ services:
     container_name: massacre-migrate
     environment:
       DATABASE_URL: postgresql://root:massacre@massacre_postgres/halving-massacre
-    entrypoint: [ 'sh', '-c', 'cd code && npm install --no-save --quiet prisma@5.12.0 && npx prisma migrate deploy']
+    entrypoint:
+      [
+        'sh',
+        '-c',
+        'cd code && npm install --no-save --quiet prisma@5.12.0 && npx prisma migrate deploy'
+      ]
     volumes:
       - ./prisma:/code/prisma
     depends_on:
