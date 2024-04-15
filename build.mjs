@@ -3,7 +3,6 @@
 import { writeFileSync } from 'fs';
 
 import { context, build } from 'esbuild';
-import tsPaths from 'esbuild-ts-paths';
 import { replaceTscAliasPaths } from 'tsc-alias';
 
 const buildOptions = {
@@ -19,7 +18,6 @@ const buildOptions = {
   outdir: './dist',
   //outExtension: { '.js': '.mjs' },
   packages: 'external',
-  plugins: [tsPaths()],
 };
 
 for (const arg of process.argv) {
