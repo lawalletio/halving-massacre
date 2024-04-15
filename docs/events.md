@@ -1,6 +1,8 @@
-## Published Events
-### Replaceable
-#### State
+# Published Events
+
+## Replaceable
+
+### State
 
 ```json
 {
@@ -11,25 +13,25 @@
     ["d", "state:<setup_id>"],
     ["L", "halving-massacre"],
     ["l", "state", "halving-massacre"],
-    ["block", "current_block"]
+    ["block", "<current_block_number>"]
   ],
-  "content": {
-    "currentBlock": block_number,
-    "currentPool": total_prize,
+  "content": JSON.stringify({
+    "currentBlock": <current_block_number>,
+    "currentPool": <total_prize>,
     "top100Players": {
-      "walias": power_amount,
+      "<walias>": <power_for_walias>,
       ...
     },
-    "nextFreeze": blockNumber,
-    "nextMassacre": blockNumber,
-    "status": "SETUP" | "CLOSED" | "INITIAL" | "NORMAL" | "FREEZE" | "FINAL"
-    "playerCount": number_of_players
- },
- ...(id, pubkey, sig, created_at)
+    "nextFreeze": <next_freeze_block_number>,
+    "nextMassacre": <next_massacre_block_number>,
+    "status": "<SETUP | CLOSED | INITIAL | NORMAL | FREEZE | FINAL>",
+    "playerCount": <number_of_players>
+  }),
+  ...
 }
 ```
 
-#### Profile
+### Profile
 
 ```json
 {
@@ -40,27 +42,29 @@
     ["d", "profile:<setup_id>:<walias>"],
     ["L", "halving-massacre"],
     ["l", "profile", "halving-massacre"],
-    ["block", "current_block"]
+    ["block", "<current_block_number>"]
   ],
-  "content": {
+  "content": JSON.stringify({
     "walias": "<walias>",
-    "power": power_amount,
-    "deathRound": number | null,
+    "power": <power_for_walias>,
+    "deathRound": <number | null>,
     "rounds": [
       {
-        "number": round_number,
-        "maxZap": highest_zap,
-        "zapped": zapped_amount,
-        "zapCount": zap_times
-      }
+        "number": <round_number>,
+        "maxZap": <amount_of_highest_zap>,
+        "zapped": <amount_zapped>,
+        "zapCount": <number_of_zaps>
+      },
+      ...
     ]
- },
- ...(id, pubkey, sig, created_at)
+  }),
+  ...
 }
 ```
 
-### Regular
-#### Setup
+## Regular
+
+### Setup
 
 ```json
 {
@@ -69,21 +73,22 @@
     ["p", "<creator>"],
     ["L", "halving-massacre"],
     ["l", "setup", "halving-massacre"],
-    ["block", "current_block"]
+    ["block", "<current_block>"]
   ],
-  "content": {
-      "initialPool": millisats,
-      "finalBlock": number,
-      "ticketPrice": millisats,
-      "minBet": millisats
-  },
- ...(id, pubkey, sig, created_at)
+  "content": JSON.stringify({
+    "initialPool": <amount_of_millisats>,
+    "finalBlock": <final_block_number>,
+    "ticketPrice": <amount_of_millisats>,
+    "minBet": <amount_of_millisats>
+  }),
+  ...
 }
 ```
 
-#### Ticket
+### Ticket
 
 ```json
+{
   "kind": 1112,
   "tags": [
     ["p", "<buyer>"], // optional
@@ -92,17 +97,19 @@
     ["L", "halving-massacre"],
     ["l", "ticket", "halving-massacre"],
     ["i", "<walias>"],
-    ["block", "current_block"]
+    ["block", "<current_block>"]
   ],
-  "content": {
-      "player": "walias"
-  }
- ...(id, pubkey, sig, created_at)
+  "content": JSON.stringify({
+    "player": "<walias>"
+  }),
+  ...
+}
 ```
 
-#### Power receipt
+### Power receipt
 
 ```json
+{
   "kind": 1112,
   "tags": [
     ["p", "<buyer>"], // optional
@@ -110,127 +117,142 @@
     ["e", "<id>", "wss://relay.lawallet.ar", "zap-receipt"],
     ["L", "halving-massacre"],
     ["l", "power-receipt", "halving-massacre"],
-    ["i", "walias"],
-    ["amount", "millisats"],
-    ["block", "current_block"]
+    ["i", "<walias>"],
+    ["amount", "<amount_of_millisats>"],
+    ["block", "<current_block>"]
   ],
-  "content": {
-      "amount": millisats,
-      "player": "walias",
-      "message": "message"
-  }
- ...(id, pubkey, sig, created_at)
+  "content": JSON.stringify({
+    "amount": <amount_of_millisats>,
+    "player": "<walias>",
+    "message": "<message>"
+  }),
+  ...
+}
 ```
 
-#### Start
+### Start
 
 ```json
+{
   "kind": 1112,
   "tags": [
     ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
     ["L", "halving-massacre"],
     ["l", "start", "halving-massacre"],
-    ["block", "current_block"]
+    ["block", "<current_block>"]
   ],
   "content": JSON.stringify({
     "massacreSchedule": [
       {
-        "height": massacre_block_height,
-        "survivors": number_of_survivors,
-        "freezeHeight": freeze_block_height,
-        "nextMassacre": index | null,
+        "height": <massacre_block_height>,
+        "survivors": <number_of_survivors>,
+        "freezeHeight": <freeze_block_height>,
+        "nextMassacre": <index | null>,
       },
-    ],
+      ...
+    ]
   }),
- ...(id, pubkey, sig, created_at)
+  ...
+}
 ```
 
-#### Freeze
+### Freeze
 
 ```json
+{
   kind: 1112,
   "tags": [
     ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
     ["e", "<id>", "wss://relay.lawallet.ar", "zap-receipt"],
     ["L", "halving-massacre"],
     ["l", "freeze", "halving-massacre"],
-    ["block", "current_block"]
+    ["block", "<current_block>"]
   ],
-  "content": {
-    "currentBlock": block_number,
+  "content": JSON.stringify({
+    "currentBlock": <block_number>,
     "players": {
-      "walias": power_amount,
+      "<walias>": <power_for_walias>,
       ...
     }
-  }
- ...(id, pubkey, sig, created_at)
+  }),
+  ...
+}
 ```
 
-#### Change round length
+### Change round length
 
 ```json
+{
   "kind": 1112,
   "tags": [
     ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
     ["L", "halving-massacre"],
     ["l", "change-round-length", "halving-massacre"],
-    ["block", "current_block"]
+    ["block", "<current_block>"]
   ],
-  "content": {
-      "roundLength": number,
-      "freezeTimeout": number,
-  },
- ...(id, pubkey, sig, created_at)
+  "content": JSON.stringify({
+    "roundLength": <number_of_round_blocks>,
+    "freezeTimeout": <number_of_freeze_blocks>
+  }),
+  ...
+}
 ```
 
-#### Massacre
+### Massacre
 
 ```json
+{
   "kind": 1112,
   "tags": [
     ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
     ["L", "halving-massacre"],
     ["l", "massacre", "halving-massacre"],
-    ["block", "current_block"],
-    ["hash", "block_hash"]
+    ["block", "<current_block>"],
+    ["hash", "<massacre_block_hash>"]
   ],
-  "content": {
+  "content": JSON.stringify({
     "block": {
-      "id": "block-id",
-      "header": "block-header",
-      "height": number,
-      "merkleRoot": "merkle-root",
-    }
+      "id": "<massacre_block_id>",
+      "header": "<massacre_block_-_header>",
+      "height": <massacre_block_height>,
+      "merkleRoot": "<massacre_block_merkle_root>"
+    },
     "players": {
-      "walias": power_amount,
+      "<walias>": <power_for_walias>,
       ...
     },
-    "deadPlayers": ["<walias>", "<walias>" ...]
-  }
- ...(id, pubkey, sig, created_at)
+    "deadPlayers": [
+      "<dead_plyer_walias>",
+      ...
+    ]
+  }),
+  ...
+}
 ```
 
-#### Final
+### Final
 
 ```json
+{
   "kind": 1112,
   "tags": [
     ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
     ["e", "<id>", "wss://relay.lawallet.ar", "massacre"],
     ["L", "halving-massacre"],
     ["l", "final", "halving-massacre"],
-    ["block", "current_block"],
-    ["hash", "block_hash"]
+    ["block", "<current_block>"],
+    ["hash", "<final_block_hash>"]
   ],
-  "content": {
+  "content": JSON.stringify({
     "block": {
-      "id": "block-id",
-      "header": "block-header",
-      "height": number,
-      "merkleRoot": "merkle-root",
-    }
-    "survivor": "walias",
-    "totalPool": millisats
-  }
- ...(id, pubkey, sig, created_at)
+      "id": "<final_block_id>",
+      "header": "<final_block_header>",
+      "height": <final_block_height>,
+      "merkleRoot": "<final_block_merkle_root>"
+    },
+    "survivor": "<survivor_walias>",
+    "totalPool": <amount_of_millisats>
+  }),
+  ...
+}
 ```

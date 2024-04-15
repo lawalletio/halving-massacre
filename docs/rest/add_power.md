@@ -1,17 +1,14 @@
 # Add Power
 
-This endpoint is used for adding power for a user that is currently alive within the game and the game is accepting power (SETUP, CLOSED, INITIAL or NORMAL)
+This endpoint is used for adding power for a user that is currently alive within the game and the game is accepting power (`SETUP`, `CLOSED`, `INITIAL`, or `NORMAL` state).
 
 ```sh
-curl --request GET \
-  --url
-  'http://https/<apiendpoint>/games/<gameId>/power?amount=&walias=&message='
+curl --request GET --url 'http://https/<apiendpoint>/games/<gameId>/power?amount=<amount_of_millisats>&walias=<walias>&message=<message>'
 ```
 
-## Method, URL and params
+## Method, URL, and Params
 
-`GET
-https://<apidomain>/games/<gameId>/power?amount=<amount>&walias=<walias>&message=`
+`GET https://<apidomain>/games/<gameId>/power?amount=<amount_of_millisats>&walias=<walias>&message=<message>`
 
 ### Path params
 
@@ -19,9 +16,9 @@ https://<apidomain>/games/<gameId>/power?amount=<amount>&walias=<walias>&message
 
 ### Query params
 
-- `amount`: in millisats to be added as power for the walias, must be equal or greater than the min power stipulated by the setup event
-- `walias`: of the player, must already have bought a ticket and be alive in the current round
-- `message`: for the player, must be less than 255 chars long
+- `amount_of_millisats`: millisats to be added as power for the `walias`, must be equal to or greater than the minimum power stipulated by the setup event.
+- `walias`: of the player, must have already bought a ticket and be alive in the current round.
+- `message`: to the player, must be less than 255 characters long.
 
 ## Response body
 
@@ -29,22 +26,22 @@ https://<apidomain>/games/<gameId>/power?amount=<amount>&walias=<walias>&message
 
 ```json
 {
-    "success": true,
-    "pr": "<bolt11 invoice>",
-    "routes": [],
-    "eTag": "<string that will be published ad zapReceipt eTag>"
+  "success": true,
+  "pr": "<bolt11 invoice>",
+  "routes": [],
+  "eTag": "<string that will be published as zapReceipt eTag>"
 }
 ```
 
-The success response will be a valid lud06 response with the invoice in the `pr` key
+The success response will be a valid `lud06` response with the invoice in the `pr` key.
 
 ### Error
 
 ```json
 {
-    "success": false,
-    "message": "<Error message>"
+  "success": false,
+  "message": "<error message>"
 }
 ```
 
-If any validation fails the response will be have a 4XX code, if the invoice generation itself failed or we encountered any unexpected error the code will be 5XX, in any case the body will contain a message.
+If any validation fails the response will be have a 4xx code, if the invoice generation itself failed or we encountered any unexpected error the code will be 5xx, in any case the body will contain the error message.
