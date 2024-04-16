@@ -54,6 +54,7 @@ export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
     select: {
       id: true,
       massacreHeight: true,
+      number: true,
       freezeHeight: true,
       nextRound: { select: { id: true } },
       _count: { select: { roundPlayers: true } },
@@ -64,7 +65,7 @@ export type GameStateData = Prisma.GameGetPayload<{
   select: typeof GAME_STATE_SELECT;
 }>;
 
-type PlayerData = {
+export type PlayerData = {
   walias: string;
   power: bigint;
   deathRoundId: string | null;

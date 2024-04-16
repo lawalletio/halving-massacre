@@ -209,10 +209,11 @@
       "<walias>": <power_for_walias>,
       ...
     },
-    "deadPlayers": [
-      "<dead_player_walias>",
+    "deadPlayers": {
+      "<walias>": <power_for_walias>,
       ...
-    ]
+    },
+    "delta": <delta_power>
   }),
   ...
 }

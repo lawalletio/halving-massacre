@@ -3,6 +3,7 @@ import { NostrEvent } from '@nostr-dev-kit/ndk';
 import {
   GAME_STATE_SELECT,
   GameStateData,
+  PlayerData,
   powerByPlayer,
   powerReceiptEvent,
 } from '@src/utils';
@@ -17,18 +18,26 @@ const log: Debugger = logger.extend('lib:massacre');
 const debug: Debugger = log.extend('debug');
 
 export function massacreEvent(
-  game: Pick<GameStateData, 'id' | 'players'>,
+  game: Pick<GameStateData, 'id' | 'players' | 'currentRound'>,
   block: MsBlock,
-  deadPlayers: string[],
+  delta: number,
 ): NostrEvent {
+  const [alive, dead] = game.players.reduce<[PlayerData[], PlayerData[]]>(
+    (result, value) => {
+      result[value.deathRoundId === null ? 0 : 1].push(value);
+      return result;
+    },
+    [[], []],
+  );
   const content = JSON.stringify({
     block: {
       id: block.id,
       height: block.height,
       header: block.extras['header'],
     },
-    players: powerByPlayer(game.players.filter((p) => p.deathRoundId === null)),
-    deadPlayers,
+    players: powerByPlayer(alive),
+    deadPlayers: powerByPlayer(dead),
+    delta,
   });
   return {
     content,
@@ -40,6 +49,7 @@ export function massacreEvent(
       ['l', 'massacre', 'halving-massacre'],
       ['block', block.height.toString()],
       ['hash', block.id],
+      ['t', `round:${game.currentRound.number}`],
     ],
     created_at: nowInSeconds(),
   };
@@ -99,7 +109,7 @@ export async function applyMassacre(
       }),
     ]);
   log('Generating and publishing massacre events...');
-  const massacreE = massacreEvent(updatedGame, block, lotteryRes.losers);
+  const massacreE = massacreEvent(updatedGame, block, lotteryRes.delta);
   const eventHash = getEventHash(massacreE as UnsignedEvent);
   ctx.statePublisher.queue(game.id, eventHash);
   const publishPromises = [ctx.outbox.publish(massacreE)];
