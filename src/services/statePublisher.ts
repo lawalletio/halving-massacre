@@ -1,5 +1,5 @@
 import { Outbox, logger } from '@lawallet/module';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import {
   GAME_STATE_SELECT,
   PROFILE_SELECT,
@@ -89,6 +89,7 @@ export class StatePublisher {
         ...GAME_STATE_SELECT,
         players: {
           select: PROFILE_SELECT,
+          orderBy: { power: Prisma.SortOrder.desc },
         },
       },
       where: {
