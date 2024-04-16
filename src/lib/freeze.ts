@@ -11,7 +11,9 @@ export function freezeEvent(
   const currentBlock = game.currentBlock;
   const content = JSON.stringify({
     currentBlock,
-    players: powerByPlayer(game.currentRound.roundPlayers.map((rp) => rp.player)),
+    players: powerByPlayer(
+      game.currentRound.roundPlayers.map((rp) => rp.player),
+    ),
   });
   return {
     content,

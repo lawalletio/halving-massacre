@@ -1,6 +1,11 @@
 import { Kind, logger, nowInSeconds, requiredEnvVar } from '@lawallet/module';
 import { NostrEvent } from '@nostr-dev-kit/ndk';
-import { GAME_STATE_SELECT, GameStateData, powerByPlayer } from '@src/utils';
+import {
+  GAME_STATE_SELECT,
+  GameStateData,
+  powerByPlayer,
+  powerReceiptEvent,
+} from '@src/utils';
 import { GameContext } from '@src/index';
 import { Prisma, Status } from '@prisma/client';
 import { UnsignedEvent, getEventHash } from 'nostr-tools';
@@ -36,7 +41,7 @@ export function massacreEvent(
       ['L', 'halving-massacre'],
       ['l', 'massacre', 'halving-massacre'],
       ['block', block.height.toString()],
-      ['hash', block.id]
+      ['hash', block.id],
     ],
     created_at: nowInSeconds(),
   };
@@ -106,8 +111,16 @@ export async function applyMassacre(
       roundPlayer.player.walias,
       eventHash,
     );
-    //TODO create and publish powers
-    //publishPromises.push();
+    const powerEvent = powerReceiptEvent(
+      updatedGame,
+      lotteryRes.delta,
+      {
+        message: 'You survived! For now...',
+        walias: roundPlayer.player.walias,
+      },
+      eventHash,
+    );
+    publishPromises.push(ctx.outbox.publish(powerEvent));
   }
   const publishResults = await Promise.allSettled(publishPromises);
   debug('Publication results: %O', publishResults);

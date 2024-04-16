@@ -65,7 +65,7 @@ export function startMempoolSpaceConnection(ctx: GameContext) {
           where: {
             OR: [
               {
-                status: { in: [ Status.INITIAL, Status.NORMAL ] },
+                status: { in: [Status.INITIAL, Status.NORMAL] },
                 currentRound: { freezeHeight: currentBlock.height },
               },
               {
