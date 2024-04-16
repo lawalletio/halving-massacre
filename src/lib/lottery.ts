@@ -168,15 +168,16 @@ function _rngGet(rng: RNG): 0 | 1 {
  * @returns A uniformly-random number between 0 (inclusive) and {@link max} (exclusive).
  */
 function _fdr(rng: RNG, max: number): number {
-  let [limit, value]: [number, number] = [1, 0];
+  const bmax: bigint = BigInt(max);
+  let [limit, value]: [bigint, bigint] = [1n, 0n];
   // eslint-disable-next-line
   while (true) {
-    [limit, value] = [limit << 1, (value << 1) + _rngGet(rng)];
-    if (max <= limit) {
-      if (value < max) {
-        return value;
+    [limit, value] = [limit << 1n, (value << 1n) + BigInt(_rngGet(rng))];
+    if (bmax <= limit) {
+      if (value < bmax) {
+        return Number(value);
       } else {
-        [limit, value] = [limit - max, value - max];
+        [limit, value] = [limit - bmax, value - bmax];
       }
     }
   }
@@ -292,7 +293,6 @@ function halve(
     if (i < limit) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       winners[order[i]] = players[order[i]];
-      players;
     } else {
       losers.push(order[i]);
       accumulated += players[order[i]];
@@ -416,6 +416,8 @@ function estimate(
     (buckets.length - idx + (power - min) / (max - min) - 1) / buckets.length
   );
 }
+
+// --------------------------------------------------------------------------------------------------------------------
 
 export type { WeightedPlayers };
 export { halve, rounds, simulate, bucketize, estimate };
