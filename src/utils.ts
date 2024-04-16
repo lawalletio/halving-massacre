@@ -56,9 +56,9 @@ export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
         select: { player: { select: { walias: true, power: true } } },
         orderBy: { player: { power: Prisma.SortOrder.desc } },
       },
+      _count: { select: { roundPlayers: true } },
     },
   },
-  _count: { select: { players: true } },
 });
 export type GameStateData = Prisma.GameGetPayload<{
   select: typeof GAME_STATE_SELECT;
@@ -75,7 +75,7 @@ export function gameStateEvent(
   game: GameStateData,
   lastModifier: string,
 ): NostrEvent {
-  const { currentRound, currentPool, _count, ...rest } = game;
+  const { currentRound, currentPool, ...rest } = game;
   const players = powerByPlayer(
     currentRound.roundPlayers.map((rp) => rp.player),
   );
@@ -85,7 +85,7 @@ export function gameStateEvent(
     nextFreeze: currentRound.freezeHeight,
     currentPool: Number(currentPool),
     players,
-    playerCount: _count.players,
+    playerCount: currentRound._count.roundPlayers,
     buckets: bucketize(players),
   });
   return {
