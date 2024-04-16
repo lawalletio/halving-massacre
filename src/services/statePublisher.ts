@@ -84,15 +84,11 @@ export class StatePublisher {
     const publishables = Object.values(this.#shouldPublishMap).filter(
       (e) => e.shouldPublish,
     );
-    const waliases = publishables.flatMap((p) =>
-      p.profiles.map((pr) => pr.walias),
-    );
     const games = await this.#prisma.game.findMany({
       select: {
         ...GAME_STATE_SELECT,
         players: {
           select: PROFILE_SELECT,
-          where: { walias: { in: waliases } },
         },
       },
       where: {
@@ -101,13 +97,12 @@ export class StatePublisher {
     });
     try {
       for (const game of games) {
-        const { players, ...gameState } = game;
         debug('Publishing state for game %s', game.id);
         const toPublish = this.#shouldPublishMap[game.id]!;
         const profilePublications: Promise<void>[] = [];
         let profile: PublishInfo['profiles'][0] | undefined;
         while (undefined !== (profile = toPublish.profiles.pop())) {
-          const player = players.find((p) => profile!.walias === p.walias);
+          const player = game.players.find((p) => profile!.walias === p.walias);
           if (!player) {
             error(
               'Player %s not found on game %s',
@@ -122,9 +117,7 @@ export class StatePublisher {
           );
         }
         const results = await Promise.allSettled([
-          this.#outbox.publish(
-            gameStateEvent(gameState, toPublish.lastModifier),
-          ),
+          this.#outbox.publish(gameStateEvent(game, toPublish.lastModifier)),
           ...profilePublications,
         ]);
         if (results.some((r) => 'rejected' === r.status)) {

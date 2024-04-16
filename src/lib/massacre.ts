@@ -17,7 +17,7 @@ const log: Debugger = logger.extend('lib:massacre');
 const debug: Debugger = log.extend('debug');
 
 export function massacreEvent(
-  game: Pick<GameStateData, 'id' | 'currentRound'>,
+  game: Pick<GameStateData, 'id' | 'players'>,
   block: MsBlock,
   deadPlayers: string[],
 ): NostrEvent {
@@ -27,9 +27,7 @@ export function massacreEvent(
       height: block.height,
       header: block.extras['header'],
     },
-    players: powerByPlayer(
-      game.currentRound.roundPlayers.map((rp) => rp.player),
-    ),
+    players: powerByPlayer(game.players.filter((p) => p.deathRoundId === null)),
     deadPlayers,
   });
   return {
@@ -58,14 +56,14 @@ export function massacreEvent(
  * @param ctx of the game
  */
 export async function applyMassacre(
-  game: Pick<GameStateData, 'id' | 'currentRound'>,
+  game: Pick<GameStateData, 'id' | 'currentRound' | 'players'>,
   block: MsBlock,
   ctx: GameContext,
 ): Promise<void> {
   log('Massacre begin! for game %s and block %s', game.id, block.height);
   debug('For game %s received block %O', game.id, block);
   const players = powerByPlayer(
-    game.currentRound.roundPlayers.map((rp) => rp.player),
+    game.players.filter((p) => p.deathRoundId === null),
   );
   const lotteryRes = halve(block.id, players);
   log('Ran lottery');
@@ -105,18 +103,16 @@ export async function applyMassacre(
   const eventHash = getEventHash(massacreE as UnsignedEvent);
   ctx.statePublisher.queue(game.id, eventHash);
   const publishPromises = [ctx.outbox.publish(massacreE)];
-  for (const roundPlayer of updatedGame.currentRound.roundPlayers) {
-    ctx.statePublisher.queueProfile(
-      game.id,
-      roundPlayer.player.walias,
-      eventHash,
-    );
+  for (const player of updatedGame.players.filter(
+    (p) => p.deathRoundId !== null,
+  )) {
+    ctx.statePublisher.queueProfile(game.id, player.walias, eventHash);
     const powerEvent = powerReceiptEvent(
       updatedGame,
       lotteryRes.delta,
       {
         message: 'You survived! For now...',
-        walias: roundPlayer.player.walias,
+        walias: player.walias,
       },
       eventHash,
     );

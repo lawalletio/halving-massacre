@@ -46,16 +46,16 @@ export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
   currentBlock: true,
   status: true,
   currentPool: true,
+  players: {
+    select: { walias: true, power: true, deathRoundId: true },
+    orderBy: { power: Prisma.SortOrder.desc },
+  },
   currentRound: {
     select: {
       id: true,
       massacreHeight: true,
       freezeHeight: true,
       nextRound: { select: { id: true } },
-      roundPlayers: {
-        select: { player: { select: { walias: true, power: true } } },
-        orderBy: { player: { power: Prisma.SortOrder.desc } },
-      },
       _count: { select: { roundPlayers: true } },
     },
   },
@@ -63,6 +63,12 @@ export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
 export type GameStateData = Prisma.GameGetPayload<{
   select: typeof GAME_STATE_SELECT;
 }>;
+
+type PlayerData = {
+  walias: string;
+  power: bigint;
+  deathRoundId: string | null;
+};
 
 /**
  * Generate the event of the game state
@@ -75,18 +81,24 @@ export function gameStateEvent(
   game: GameStateData,
   lastModifier: string,
 ): NostrEvent {
-  const { currentRound, currentPool, ...rest } = game;
-  const players = powerByPlayer(
-    currentRound.roundPlayers.map((rp) => rp.player),
+  const { currentRound, currentPool, players, ...rest } = game;
+  const [alive, dead] = players.reduce<[PlayerData[], PlayerData[]]>(
+    (result, value) => {
+      result[value.deathRoundId === null ? 0 : 1].push(value);
+      return result;
+    },
+    [[], []],
   );
+  const alivePlayers = powerByPlayer(alive);
   const content = JSON.stringify({
     ...rest,
     nextMassacre: currentRound.massacreHeight,
     nextFreeze: currentRound.freezeHeight,
     currentPool: Number(currentPool),
-    players,
+    players: alivePlayers,
     playerCount: currentRound._count.roundPlayers,
-    buckets: bucketize(players),
+    deadPlayers: powerByPlayer(dead),
+    buckets: bucketize(alivePlayers),
   });
   return {
     content,
@@ -107,6 +119,7 @@ export function gameStateEvent(
 export const PROFILE_SELECT = Prisma.validator<Prisma.PlayerSelect>()({
   walias: true,
   power: true,
+  deathRoundId: true,
   deathRound: { select: { number: true } },
   game: { select: { id: true, currentBlock: true } },
   roundPlayers: {

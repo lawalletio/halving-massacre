@@ -9,14 +9,12 @@ import { Debugger } from 'debug';
 const log: Debugger = logger.extend('lib:freeze');
 
 export function freezeEvent(
-  game: Pick<GameStateData, 'id' | 'currentBlock' | 'currentRound'>,
+  game: Pick<GameStateData, 'id' | 'currentBlock' | 'players'>,
 ): NostrEvent {
   const currentBlock = game.currentBlock;
   const content = JSON.stringify({
     currentBlock,
-    players: powerByPlayer(
-      game.currentRound.roundPlayers.map((rp) => rp.player),
-    ),
+    players: powerByPlayer(game.players.filter((p) => p.deathRoundId === null)),
   });
   return {
     content,
