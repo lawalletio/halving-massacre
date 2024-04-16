@@ -18,7 +18,7 @@
   "content": JSON.stringify({
     "currentBlock": <current_block_number>,
     "currentPool": <total_prize>,
-    "top100Players": {
+    "players": {
       "<walias>": <power_for_walias>,
       ...
     },

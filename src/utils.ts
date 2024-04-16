@@ -74,15 +74,17 @@ export function gameStateEvent(
   lastModifier: string,
 ): NostrEvent {
   const { currentRound, currentPool, _count, ...rest } = game;
-  const players = currentRound.roundPlayers.map((rp) => rp.player);
+  const players = powerByPlayer(
+    currentRound.roundPlayers.map((rp) => rp.player),
+  );
   const content = JSON.stringify({
     ...rest,
     nextMassacre: currentRound.massacreHeight,
     nextFreeze: currentRound.freezeHeight,
     currentPool: Number(currentPool),
-    top100Players: powerByPlayer(players, 100),
+    players,
     playerCount: _count.players,
-    buckets: bucketize(powerByPlayer(players)),
+    buckets: bucketize(players),
   });
   return {
     content,
