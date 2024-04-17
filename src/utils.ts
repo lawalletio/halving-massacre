@@ -23,6 +23,12 @@ export enum ZapType {
   POWER = 'POWER',
 }
 
+export enum PowerType {
+  LIGHTNING = 'LIGHTNING',
+  ONCHAIN = 'ONCHAIN',
+  MASSACRE = 'MASSACRE',
+}
+
 export type ZapTicketContent = {
   type: ZapType.TICKET;
   gameId: string;
@@ -213,9 +219,11 @@ export function powerReceiptEvent(
   amount: number,
   zapReceiptContent: Pick<ZapPowerContent, 'message' | 'walias'>,
   zapReceiptId: string,
+  type: PowerType = PowerType.LIGHTNING,
 ): NostrEvent {
   const { message, walias } = zapReceiptContent;
   const content = JSON.stringify({
+    type,
     amount,
     message,
     player: walias,

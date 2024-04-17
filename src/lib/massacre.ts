@@ -4,6 +4,7 @@ import {
   GAME_STATE_SELECT,
   GameStateData,
   PlayerData,
+  PowerType,
   SURVIVOR_MESSAGE,
   powerByPlayer,
   powerReceiptEvent,
@@ -127,6 +128,7 @@ export async function applyMassacre(
       lotteryRes.delta,
       { message: SURVIVOR_MESSAGE, walias: player.walias },
       eventHash,
+      PowerType.MASSACRE,
     );
     publishPromises.push(ctx.outbox.publish(powerEvent));
   }

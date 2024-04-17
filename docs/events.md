@@ -22,6 +22,10 @@
       "<walias>": <power_for_walias>,
       ...
     },
+    "deadPlayers": {
+      "<walias>": <power_for_walias>,
+      ...
+    },
     "nextFreeze": <next_freeze_block_number>,
     "nextMassacre": <next_massacre_block_number>,
     "status": "<SETUP | CLOSED | INITIAL | NORMAL | FREEZE | FINAL>",
@@ -131,7 +135,8 @@
   "content": JSON.stringify({
     "amount": <amount_of_millisats>,
     "player": "<walias>",
-    "message": "<message>"
+    "message": "<message>",
+    "type": "LIGHTNING" | "ONCHAIN" | "MASSACRE"
   }),
   ...
 }
@@ -174,6 +179,7 @@
     ["L", "halving-massacre"],
     ["l", "freeze", "halving-massacre"],
     ["block", "<current_block>"]
+    ["t", "round:<round_number>"]
   ],
   "content": JSON.stringify({
     "currentBlock": <block_number>,
