@@ -4,6 +4,7 @@ import {
   GAME_STATE_SELECT,
   GameStateData,
   PlayerData,
+  SURVIVOR_MESSAGE,
   powerByPlayer,
   powerReceiptEvent,
 } from '@src/utils';
@@ -120,10 +121,7 @@ export async function applyMassacre(
     const powerEvent = powerReceiptEvent(
       updatedGame,
       lotteryRes.delta,
-      {
-        message: 'You survived! For now...',
-        walias: player.walias,
-      },
+      { message: SURVIVOR_MESSAGE, walias: player.walias },
       eventHash,
     );
     publishPromises.push(ctx.outbox.publish(powerEvent));

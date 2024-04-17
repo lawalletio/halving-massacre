@@ -1,5 +1,5 @@
 import { ExtendedRequest, logger } from '@lawallet/module';
-import { ZapType, getInvoice, validWalias } from '@src/utils';
+import { SURVIVOR_MESSAGE, ZapType, getInvoice, validWalias } from '@src/utils';
 import type { Response } from 'express';
 import { GameContext } from '@src/index';
 import { Prisma, PrismaClient, Status } from '@prisma/client';
@@ -82,6 +82,10 @@ async function handler<Context extends GameContext>(
   const message = req.query['message']?.toString() ?? '';
   if (255 < message.length) {
     res.status(422).send({ success: false, message: 'Message too long' });
+    return;
+  }
+  if (SURVIVOR_MESSAGE === message) {
+    res.status(422).send({ success: false, message: 'Inappropiate message' });
     return;
   }
   const amount = Number(qAmount);

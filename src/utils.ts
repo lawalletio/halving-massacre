@@ -16,6 +16,8 @@ const warn: Debugger = log.extend('warn');
 export const WALIAS_RE =
   /(?<username>^[A-Z0-9._-]{1,64})@(?<domain>(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63})$/i;
 
+export const SURVIVOR_MESSAGE = 'You survived! For now...';
+
 export enum ZapType {
   TICKET = 'TICKET',
   POWER = 'POWER',
