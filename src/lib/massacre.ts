@@ -25,7 +25,11 @@ export function massacreEvent(
 ): NostrEvent {
   const [alive, dead] = game.players.reduce<[PlayerData[], PlayerData[]]>(
     (result, value) => {
-      result[value.deathRoundId === null ? 0 : 1].push(value);
+      if (value.deathRoundId === null) {
+        result[0].push(value);
+      } else if (value.deathRoundId === game.currentRound.prevRound?.id) {
+        result[1].push(value);
+      }
       return result;
     },
     [[], []],

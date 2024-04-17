@@ -59,6 +59,7 @@ export const GAME_STATE_SELECT = Prisma.validator<Prisma.GameSelect>()({
       number: true,
       freezeHeight: true,
       nextRound: { select: { id: true } },
+      prevRound: { select: { id: true } },
       _count: { select: { roundPlayers: true } },
     },
   },
