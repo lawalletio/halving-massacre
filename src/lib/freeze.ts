@@ -9,7 +9,7 @@ import { Debugger } from 'debug';
 const log: Debugger = logger.extend('lib:freeze');
 
 export function freezeEvent(
-  game: Pick<GameStateData, 'id' | 'currentBlock' | 'players'>,
+  game: Pick<GameStateData, 'id' | 'currentBlock' | 'players' | 'currentRound'>,
 ): NostrEvent {
   const currentBlock = game.currentBlock;
   const content = JSON.stringify({
@@ -25,6 +25,7 @@ export function freezeEvent(
       ['L', 'halving-massacre'],
       ['l', 'freeze', 'halving-massacre'],
       ['block', currentBlock.toString()],
+      ['t', `round:${game.currentRound.number}`],
     ],
     created_at: nowInSeconds(),
   };
