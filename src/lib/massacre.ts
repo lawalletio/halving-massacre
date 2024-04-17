@@ -114,7 +114,7 @@ export async function applyMassacre(
   ctx.statePublisher.queue(game.id, eventHash);
   const publishPromises = [ctx.outbox.publish(massacreE)];
   for (const player of updatedGame.players.filter(
-    (p) => p.deathRoundId !== null,
+    (p) => p.deathRoundId === null,
   )) {
     ctx.statePublisher.queueProfile(game.id, player.walias, eventHash);
     const powerEvent = powerReceiptEvent(
