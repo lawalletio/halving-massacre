@@ -243,10 +243,11 @@
       "id": "<final_block_id>",
       "header": "<final_block_header>",
       "height": <final_block_height>,
-      "merkleRoot": "<final_block_merkle_root>"
     },
-    "survivor": "<survivor_walias>",
-    "totalPool": <amount_of_millisats>
+    "winners": {
+      "<walias>": <prize_in_millisats>,
+      ...
+    }
   }),
   ...
 }
