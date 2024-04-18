@@ -5,9 +5,10 @@ import WebSocket from 'ws';
 import { GAME_STATE_SELECT } from '@src/utils';
 import { GameContext } from '@src/index';
 import { freezeGame } from '@lib/freeze';
-import { applyMassacre } from '@lib/massacre';
+import { applyFinalMassacre, applyMassacre } from '@lib/massacre';
 
 const log: Debugger = logger.extend('mempoolspace');
+const warn: Debugger = logger.extend('warn');
 
 export type MsBlock = {
   id: string;
@@ -86,11 +87,11 @@ export function startMempoolSpaceConnection(ctx: GameContext) {
               if (game.currentRound.nextRound) {
                 promises.push(applyMassacre(game, currentBlock, ctx));
               } else {
-                //TODO final massacre
+                promises.push(applyFinalMassacre(game, currentBlock, ctx));
               }
               break;
             default:
-              //TODO what to do
+              warn('Impossible game status');
               break;
           }
         }
