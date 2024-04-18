@@ -224,31 +224,3 @@
   ...
 }
 ```
-
-### Final
-
-```json
-{
-  "kind": 1112,
-  "tags": [
-    ["e", "<id>", "wss://relay.lawallet.ar", "setup"],
-    ["e", "<id>", "wss://relay.lawallet.ar", "massacre"],
-    ["L", "halving-massacre"],
-    ["l", "final", "halving-massacre"],
-    ["block", "<current_block>"],
-    ["hash", "<final_block_hash>"]
-  ],
-  "content": JSON.stringify({
-    "block": {
-      "id": "<final_block_id>",
-      "header": "<final_block_header>",
-      "height": <final_block_height>,
-    },
-    "winners": {
-      "<walias>": <prize_in_millisats>,
-      ...
-    }
-  }),
-  ...
-}
-```
