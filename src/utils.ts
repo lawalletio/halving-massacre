@@ -1,5 +1,5 @@
 import { Kind, logger, nowInSeconds, requiredEnvVar } from '@lawallet/module';
-import { Player, Prisma } from '@prisma/client';
+import { Player, Prisma, Status } from '@prisma/client';
 import { Debugger } from 'debug';
 import NDK, {
   NDKEvent,
@@ -17,6 +17,13 @@ export const WALIAS_RE =
   /(?<username>^[A-Z0-9._-]{1,64})@(?<domain>(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63})$/i;
 
 export const SURVIVOR_MESSAGE = 'You survived! For now...';
+
+export const VALID_POWER_STATUSES: Status[] = [
+  Status.SETUP,
+  Status.CLOSED,
+  Status.INITIAL,
+  Status.NORMAL,
+];
 
 export enum ZapType {
   TICKET = 'TICKET',

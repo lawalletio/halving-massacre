@@ -7,6 +7,7 @@ import {
 import { GameContext } from '../index';
 import {
   GAME_STATE_SELECT,
+  VALID_POWER_STATUSES,
   ZapPowerContent,
   ZapTicketContent,
   ZapType,
@@ -333,6 +334,7 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
     }
     const poolPubKey = getTagValue(event, 'p') ?? '';
     const gameExists = await ctx.prisma.game.findUnique({
+      select: { status: true },
       where: { id: content.gameId, poolPubKey },
     });
     if (!gameExists) {
@@ -341,6 +343,10 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
         content.gameId,
         poolPubKey,
       );
+      return;
+    }
+    if (!VALID_POWER_STATUSES.includes(gameExists.status)) {
+      warn('GAME IS NOT IN A VALID ZAP STATE FOR %O', content.gameId);
       return;
     }
     const amount = Number(getTagValue(zapRequest, 'amount'));

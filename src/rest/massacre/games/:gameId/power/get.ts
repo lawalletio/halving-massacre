@@ -1,5 +1,11 @@
 import { ExtendedRequest, logger } from '@lawallet/module';
-import { SURVIVOR_MESSAGE, ZapType, getInvoice, validWalias } from '@src/utils';
+import {
+  SURVIVOR_MESSAGE,
+  VALID_POWER_STATUSES,
+  ZapType,
+  getInvoice,
+  validWalias,
+} from '@src/utils';
 import type { Response } from 'express';
 import { GameContext } from '@src/index';
 import { Prisma, PrismaClient, Status } from '@prisma/client';
@@ -8,13 +14,6 @@ import { Debugger } from 'debug';
 
 const log: Debugger = logger.extend('rest:game:gameId:power:get');
 const warn: Debugger = log.extend('warn');
-
-const VALID_STATUSES: Status[] = [
-  Status.SETUP,
-  Status.CLOSED,
-  Status.INITIAL,
-  Status.NORMAL,
-];
 
 const GAME_SELECT = Prisma.validator<Prisma.GameSelect>()({
   minBet: true,
@@ -109,7 +108,7 @@ async function handler<Context extends GameContext>(
     });
     return;
   }
-  if (!VALID_STATUSES.includes(game.status)) {
+  if (!VALID_POWER_STATUSES.includes(game.status)) {
     res.status(409).send({
       success: false,
       message: `This game is not accepting power wait for block: ${game.currentRound.massacreHeight}`,
