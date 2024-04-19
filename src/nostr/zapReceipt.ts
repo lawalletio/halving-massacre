@@ -12,6 +12,7 @@ import {
   ZapTicketContent,
   ZapType,
   powerReceiptEvent,
+  refundEvent,
   ticketEvent,
 } from '../utils';
 import {
@@ -334,7 +335,7 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
     }
     const poolPubKey = getTagValue(event, 'p') ?? '';
     const gameExists = await ctx.prisma.game.findUnique({
-      select: { status: true },
+      select: { id: true, currentBlock: true, status: true },
       where: { id: content.gameId, poolPubKey },
     });
     if (!gameExists) {
@@ -345,11 +346,21 @@ function getHandler<Context extends GameContext>(ctx: Context): EventHandler {
       );
       return;
     }
+    const amount = Number(getTagValue(zapRequest, 'amount'));
     if (!VALID_POWER_STATUSES.includes(gameExists.status)) {
       warn('GAME IS NOT IN A VALID ZAP STATE FOR %O', content.gameId);
+      const refundE = refundEvent(
+        gameExists,
+        amount,
+        {
+          message: `Zapped on invalid state ${gameExists.status}`,
+          walias: 'walias' in content ? content.walias : content.ticketId,
+        },
+        event.id!,
+      );
+      await ctx.outbox.publish(refundE);
       return;
     }
-    const amount = Number(getTagValue(zapRequest, 'amount'));
     switch (content.type.toUpperCase()) {
       case ZapType.TICKET.valueOf():
         debug('Consuming ticket: %O', content);

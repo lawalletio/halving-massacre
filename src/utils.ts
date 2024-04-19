@@ -219,6 +219,7 @@ export function powerByPlayer(
  * @param amount being added to the power
  * @param walias who added the power
  * @param zapReceiptId that added the power
+ * @param type of the power
  * @return the power receipt event
  */
 export function powerReceiptEvent(
@@ -244,6 +245,44 @@ export function powerReceiptEvent(
       ['e', zapReceiptId, '', 'zap-receipt'],
       ['L', 'halving-massacre'],
       ['l', 'power-receipt', 'halving-massacre'],
+      ['i', walias],
+      ['amount', amount.toString()],
+      ['block', game.currentBlock.toString()],
+    ],
+    created_at: nowInSeconds(),
+  };
+}
+
+/**
+ * Generate the event for a refund
+ *
+ * @param game state
+ * @param amount being added to the power
+ * @param walias who added the power
+ * @param zapReceiptId that added the power
+ * @return the power receipt event
+ */
+export function refundEvent(
+  game: Pick<GameStateData, 'id' | 'currentBlock'>,
+  amount: number,
+  zapReceiptContent: Pick<ZapPowerContent, 'message' | 'walias'>,
+  zapReceiptId: string,
+): NostrEvent {
+  const { message, walias } = zapReceiptContent;
+  const content = JSON.stringify({
+    amount,
+    message,
+    player: walias,
+  });
+  return {
+    content,
+    pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
+    kind: Kind.REGULAR,
+    tags: [
+      ['e', game.id, '', 'setup'],
+      ['e', zapReceiptId, '', 'zap-receipt'],
+      ['L', 'halving-massacre'],
+      ['l', 'refund', 'halving-massacre'],
       ['i', walias],
       ['amount', amount.toString()],
       ['block', game.currentBlock.toString()],
