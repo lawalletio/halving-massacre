@@ -45,6 +45,10 @@ export function massacreEvent(
     deadPlayers: powerByPlayer(dead),
     delta,
   });
+  let roundIndex = game.currentRound.number;
+  if (null !== game.currentRound.nextRound) {
+    --roundIndex;
+  }
   return {
     content,
     pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
@@ -55,52 +59,7 @@ export function massacreEvent(
       ['l', 'massacre', 'halving-massacre'],
       ['block', block.height.toString()],
       ['hash', block.id],
-      ['t', `round:${game.currentRound.number}`],
-    ],
-    created_at: nowInSeconds(),
-  };
-}
-
-//TODO: remove, there is a bug that the event was published with wrong round
-//this is very similar to massacreEvent but is a separate function to be
-//deleted
-export function finalMassacreEvent(
-  game: Pick<GameStateData, 'id' | 'players' | 'currentRound'>,
-  block: MsBlock,
-  delta: number,
-): NostrEvent {
-  const [alive, dead] = game.players.reduce<[PlayerData[], PlayerData[]]>(
-    (result, value) => {
-      if (value.deathRoundId === null) {
-        result[0].push(value);
-      } else if (value.deathRoundId === game.currentRound.prevRound?.id) {
-        result[1].push(value);
-      }
-      return result;
-    },
-    [[], []],
-  );
-  const content = JSON.stringify({
-    block: {
-      id: block.id,
-      height: block.height,
-      header: block.extras['header'],
-    },
-    players: powerByPlayer(alive),
-    deadPlayers: powerByPlayer(dead),
-    delta,
-  });
-  return {
-    content,
-    pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
-    kind: Kind.REGULAR,
-    tags: [
-      ['e', game.id, '', 'setup'],
-      ['L', 'halving-massacre'],
-      ['l', 'massacre', 'halving-massacre'],
-      ['block', block.height.toString()],
-      ['hash', block.id],
-      ['t', `round:${game.currentRound.number + 1}`],
+      ['t', `round:${roundIndex}`],
     ],
     created_at: nowInSeconds(),
   };
@@ -228,7 +187,7 @@ export async function applyFinalMassacre(
       }),
     ]);
   log('Generating and publishing massacre events...');
-  const massacreE = finalMassacreEvent(updatedGame, block, lotteryRes.delta);
+  const massacreE = massacreEvent(updatedGame, block, lotteryRes.delta);
   const eventHash = getEventHash(massacreE as UnsignedEvent);
   //TODO: final event?
   ctx.statePublisher.queue(game.id, eventHash);
