@@ -24,11 +24,13 @@ export function massacreEvent(
   block: MsBlock,
   delta: number,
 ): NostrEvent {
+  const isFinal = null === game.currentRound.nextRound;
+  const refRound = isFinal ? game.currentRound : game.currentRound.prevRound!;
   const [alive, dead] = game.players.reduce<[PlayerData[], PlayerData[]]>(
     (result, value) => {
       if (value.deathRoundId === null) {
         result[0].push(value);
-      } else if (value.deathRoundId === game.currentRound.prevRound?.id) {
+      } else if (value.deathRoundId === refRound.id) {
         result[1].push(value);
       }
       return result;
@@ -45,10 +47,6 @@ export function massacreEvent(
     deadPlayers: powerByPlayer(dead),
     delta,
   });
-  let roundIndex = game.currentRound.number;
-  if (null !== game.currentRound.nextRound) {
-    --roundIndex;
-  }
   return {
     content,
     pubkey: requiredEnvVar('NOSTR_PUBLIC_KEY'),
@@ -59,7 +57,7 @@ export function massacreEvent(
       ['l', 'massacre', 'halving-massacre'],
       ['block', block.height.toString()],
       ['hash', block.id],
-      ['t', `round:${roundIndex}`],
+      ['t', `round:${refRound.number}`],
     ],
     created_at: nowInSeconds(),
   };
